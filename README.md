@@ -9,11 +9,13 @@ bash cyber_l10n.sh
 ```
 
 ### Coroutine
-- external/coroutine.h was adapted from https://github.com/tonbit/coroutine
+- reference/coroutine.h was adapted from https://github.com/tonbit/coroutine
 - swapcontext(3) manpage
 
 ## Note
 - It seems that the Apollo Team has added `aarch64` support for CyberRT in the master branch.
+- Scheduler::ParseCpuset expects well-formatted cpuset. It will either throw or exit otherwise.
+
 
 ## Known problems
 - AtomicHashMap isn't thread-safe.

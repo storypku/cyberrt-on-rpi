@@ -43,7 +43,7 @@ bool Scheduler::CreateTask(std::function<void()>&& func,
                            const std::string& name,
                            std::shared_ptr<DataVisitorBase> visitor) {
   if (unlikely(stop_.load())) {
-    ADEBUG << "scheduler is stoped, cannot create task!";
+    ADEBUG << "scheduler is stopped, cannot create task!";
     return false;
   }
 
@@ -60,10 +60,7 @@ bool Scheduler::CreateTask(std::function<void()>&& func,
 
   if (visitor != nullptr) {
     visitor->RegisterNotifyCallback([this, task_id, name]() {
-      if (unlikely(stop_.load())) {
-        return;
-      }
-      this->NotifyProcessor(task_id);
+      this->NotifyTask(task_id);
     });
   }
   return true;
@@ -92,7 +89,6 @@ void Scheduler::ParseCpuset(const std::string& str, std::vector<int>* cpuset) {
     while (getline(ss, l, '-')) {
       range.push_back(l);
     }
-
     if (range.size() == 1) {
       cpuset->push_back(std::stoi(range[0]));
     } else if (range.size() == 2) {
@@ -101,7 +97,7 @@ void Scheduler::ParseCpuset(const std::string& str, std::vector<int>* cpuset) {
       }
     } else {
       AERROR << "Parsing cpuset format error.";
-      exit(0);
+      exit(1);
     }
   }
 }
@@ -118,36 +114,39 @@ void Scheduler::ProcessLevelResourceControl() {
 }
 
 void Scheduler::SetInnerThreadAttr(const std::string& name, std::thread* thr) {
-  if (thr != nullptr && inner_thr_confs_.find(name) != inner_thr_confs_.end()) {
-    auto th_conf = inner_thr_confs_[name];
-    auto cpuset = th_conf.cpuset();
-
-    std::vector<int> cpus;
-    ParseCpuset(cpuset, &cpus);
-    cpu_set_t set;
-    CPU_ZERO(&set);
-    for (const auto cpu : cpus) {
-      CPU_SET(cpu, &set);
-    }
-    pthread_setaffinity_np(thr->native_handle(), sizeof(set), &set);
-
-    auto policy = th_conf.policy();
-    auto prio = th_conf.prio();
-    int p;
-    if (!policy.compare("SCHED_FIFO")) {
-      p = SCHED_FIFO;
-    } else if (!policy.compare("SCHED_RR")) {
-      p = SCHED_RR;
-    } else {
-      return;
-    }
-
-    struct sched_param sp;
-    memset(static_cast<void*>(&sp), 0, sizeof(sp));
-    sp.sched_priority = prio;
-    pthread_setschedparam(thr->native_handle(), p, &sp);
+  if (thr == nullptr || inner_thr_confs_.find(name) == inner_thr_confs_.end()) {
+    return;
   }
-  return;
+
+  auto th_conf = inner_thr_confs_[name];
+  auto cpuset = th_conf.cpuset();
+
+  std::vector<int> cpus;
+  ParseCpuset(cpuset, &cpus);
+
+  cpu_set_t set;
+  CPU_ZERO(&set);
+  for (const auto cpu : cpus) {
+    CPU_SET(cpu, &set);
+  }
+  pthread_setaffinity_np(thr->native_handle(), sizeof(set), &set);
+
+  auto policy = th_conf.policy();
+  int p = 0;
+  if (!policy.compare("SCHED_FIFO")) {
+    p = SCHED_FIFO;
+  } else if (!policy.compare("SCHED_RR")) {
+    p = SCHED_RR;
+  } else {
+    return;
+  }
+
+  auto prio = th_conf.prio();
+
+  struct sched_param sp;
+  memset(static_cast<void*>(&sp), 0, sizeof(sp));
+  sp.sched_priority = prio;
+  pthread_setschedparam(thr->native_handle(), p, &sp);
 }
 
 void Scheduler::Shutdown() {

@@ -40,7 +40,7 @@ class Processor {
   Processor();
   virtual ~Processor();
 
-  void Run();
+  void Run(); // private ?
   void Stop();
   void BindContext(const std::shared_ptr<ProcessorContext>& context);
   void SetSchedAffinity(const std::vector<int>&, const std::string&, int);

@@ -34,7 +34,7 @@
 #include "cyber/common/types.h"
 #include "cyber/croutine/croutine.h"
 #include "cyber/croutine/routine_factory.h"
-#include "cyber/proto/choreography_conf.pb.h"
+// #include "cyber/proto/choreography_conf.pb.h"
 #include "cyber/scheduler/common/mutex_wrapper.h"
 
 namespace apollo {
@@ -63,7 +63,7 @@ class Scheduler {
   bool NotifyTask(uint64_t crid);
 
   void Shutdown();
-  uint32_t TaskPoolSize() { return task_pool_size_; }
+  uint32_t TaskPoolSize() const { return task_pool_size_; }
 
   virtual bool RemoveTask(const std::string& name) = 0;
 
@@ -83,10 +83,10 @@ class Scheduler {
   Scheduler() : stop_(false) {}
   void ParseCpuset(const std::string&, std::vector<int>*);
 
-  AtomicRWLock id_cr_lock_;
   AtomicHashMap<uint64_t, MutexWrapper*> id_map_mutex_;
   std::mutex cr_wl_mtx_;
 
+  AtomicRWLock id_cr_lock_;
   std::unordered_map<uint64_t, std::shared_ptr<CRoutine>> id_cr_;
   std::vector<std::shared_ptr<ProcessorContext>> pctxs_;
   std::vector<std::shared_ptr<Processor>> processors_;
