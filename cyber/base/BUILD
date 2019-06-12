@@ -6,6 +6,7 @@ cc_library(
     name = "base",
     deps = [
         "//cyber/base:atomic_hash_map",
+        "//cyber/base:concurrent_hash_map",
         "//cyber/base:atomic_rw_lock",
         "//cyber/base:bounded_queue",
         "//cyber/base:concurrent_object_pool",
@@ -37,6 +38,29 @@ cc_test(
     ],
     deps = [
         "//cyber/base:atomic_hash_map",
+        "//cyber/base:macros",
+        "@gtest//:main",
+    ],
+)
+
+cc_library(
+    name = "concurrent_hash_map",
+    hdrs = [
+        "concurrent_hash_map.h",
+    ],
+    deps = [
+        "//cyber/base:atomic_rw_lock",
+    ],
+)
+
+cc_test(
+    name = "concurrent_hash_map_test",
+    size = "small",
+    srcs = [
+        "concurrent_hash_map_test.cc",
+    ],
+    deps = [
+        "//cyber/base:concurrent_hash_map",
         "//cyber/base:macros",
         "@gtest//:main",
     ],

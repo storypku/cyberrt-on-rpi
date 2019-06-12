@@ -45,16 +45,21 @@ class CCObjectPool : public std::enable_shared_from_this<CCObjectPool<T>> {
   std::shared_ptr<T> ConstructObject(Args &&... args);
 
   std::shared_ptr<T> GetObject();
- private:
-  void ReleaseObject(T *);
+
+  uint32_t size() const {
+    auto head = free_head_.load(std::memory_order_acquire);
+    return static_cast<uint32_t>(head.net);
+  }
+
  private:
   struct Node {
     T object;
     Node *next;
   };
 
-  struct alignas(2 * sizeof(Node *)) Head {
+  struct alignas(4 * sizeof(Node *)) Head {
     uintptr_t count;
+    intptr_t  net;
     Node *node;
   };
 
@@ -62,6 +67,7 @@ class CCObjectPool : public std::enable_shared_from_this<CCObjectPool<T>> {
   CCObjectPool(CCObjectPool &) = delete;
   CCObjectPool &operator=(CCObjectPool &) = delete;
   bool FindFreeHead(Head *head);
+  void ReleaseObject(T *);
 
   std::atomic<Head> free_head_;
   Node *node_arena_ = nullptr;
@@ -73,7 +79,7 @@ CCObjectPool<T>::CCObjectPool(uint32_t size) : capacity_(size) {
   node_arena_ = static_cast<Node *>(CheckedCalloc(capacity_, sizeof(Node)));
   FOR_EACH(i, 0, capacity_ - 1) { node_arena_[i].next = node_arena_ + 1 + i; }
   node_arena_[capacity_ - 1].next = nullptr;
-  free_head_.store({0, node_arena_}, std::memory_order_relaxed);
+  free_head_.store({0, 0, node_arena_}, std::memory_order_relaxed);
 }
 
 template <typename T>
@@ -99,6 +105,7 @@ bool CCObjectPool<T>::FindFreeHead(Head *head) {
     }
     new_head.node = old_head.node->next;
     new_head.count = old_head.count + 1;
+    new_head.net = old_head.net + 1;
   } while (!free_head_.compare_exchange_weak(old_head, new_head,
                                              std::memory_order_acq_rel,
                                              std::memory_order_acquire));
@@ -141,6 +148,7 @@ void CCObjectPool<T>::ReleaseObject(T *object) {
     node->next = old_head.node;
     new_head.node = node;
     new_head.count = old_head.count + 1;
+    new_head.net = old_head.net - 1;
   } while (!free_head_.compare_exchange_weak(old_head, new_head,
                                              std::memory_order_acq_rel,
                                              std::memory_order_acquire));
