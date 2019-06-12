@@ -46,7 +46,22 @@
   template <typename T>                                          \
   constexpr bool name<T>::value;
 
-inline void cpu_relax() { asm volatile("rep; nop" ::: "memory"); }
+/**
+ * cpu_relax is an architecture specific method of telling the CPU that you don't want it to
+ * do much work. asm volatile keeps the compiler from optimising these instructions out.
+ * RTFM: https://stackoverflow.com/questions/25189839/cpu-relax-instruction-and-c11-primitives
+ */
+inline void cpu_relax() {
+#if defined(__i386__) || defined(__x86_64__)
+  asm volatile("rep; nop" ::: "memory");
+#elif defined(__arm__) || defined(__mips__)
+  asm volatile("":::"memory");
+#elif defined(__aarch64__)
+  asm volatile("yield" ::: "memory");
+#else
+  #error "cpu_relax is not defined for this architecture"
+#endif
+}
 
 inline void* CheckedMalloc(size_t size) {
   void* ptr = std::malloc(size);

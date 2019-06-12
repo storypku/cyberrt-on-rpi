@@ -37,6 +37,7 @@ cc_test(
     ],
     deps = [
         "//cyber/base:atomic_hash_map",
+        "//cyber/base:macros",
         "@gtest//:main",
     ],
 )

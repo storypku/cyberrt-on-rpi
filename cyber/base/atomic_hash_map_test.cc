@@ -15,6 +15,7 @@
  *****************************************************************************/
 
 #include "cyber/base/atomic_hash_map.h"
+#include "cyber/base/macros.h"
 
 #include <string>
 #include <thread>
@@ -69,7 +70,7 @@ TEST(AtomicHashMapTest, concurrency) {
   for (int i = 0; i < thread_num; i++) {
     t[i] = std::thread([&, i]() {
       while (!ready) {
-        asm volatile("rep; nop" ::: "memory");
+        cpu_relax();
       }
       for (int j = 0; j < thread_num * 1024; j++) {
         auto j_str = std::to_string(j);
