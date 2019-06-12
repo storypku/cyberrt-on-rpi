@@ -41,9 +41,8 @@ LessThan(const Value& val, const End& end) {
   return val != end;
 }
 
-// for (auto i = (true ? (begin) : (end));
 #define FOR_EACH(i, begin, end)           \
-  for (auto i = (begin); \
+  for (auto i = (true ? (begin) : (end)); \
        apollo::cyber::base::LessThan(i, (end)); ++i)
 
 }  // namespace base

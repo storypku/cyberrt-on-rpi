@@ -45,12 +45,6 @@ class CCObjectPool : public std::enable_shared_from_this<CCObjectPool<T>> {
   std::shared_ptr<T> ConstructObject(Args &&... args);
 
   std::shared_ptr<T> GetObject();
-
-  uint32_t size() const {
-    auto head = free_head_.load(std::memory_order_acquire);
-    return head.count;
-  }
-
  private:
   void ReleaseObject(T *);
  private:
@@ -146,7 +140,7 @@ void CCObjectPool<T>::ReleaseObject(T *object) {
   do {
     node->next = old_head.node;
     new_head.node = node;
-    new_head.count = old_head.count - 1;
+    new_head.count = old_head.count + 1;
   } while (!free_head_.compare_exchange_weak(old_head, new_head,
                                              std::memory_order_acq_rel,
                                              std::memory_order_acquire));

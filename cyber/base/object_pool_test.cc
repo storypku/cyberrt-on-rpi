@@ -79,7 +79,7 @@ TEST(CCObjectPoolTest, multi_thread) {
   }
 
   FOR_EACH(i, 0, 10) { EXPECT_EQ(nullptr, pool->ConstructObject(10)); }
-  vec.clear();
+  // vec.clear();
 }
 
 TEST(CCObjectPoolTest, construct_object) {
