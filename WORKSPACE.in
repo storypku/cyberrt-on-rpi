@@ -30,5 +30,5 @@ new_local_repository(
     build_file = "external/zlib.BUILD",
     # pkg-config --variable=libdir zlib
     #path = "/usr/lib/x86_64-linux-gnu",
-    path = "/usr/lib/aarch64-linux-gnu",
+    path = "ZLIB_PATH",
 )
