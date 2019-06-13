@@ -13,6 +13,16 @@ cc_library(
 #    ],
 )
 
+cc_test(
+    name = "hello-greet_test",
+    srcs = ["hello-greet_test.cc"],
+    deps = [
+        "@gtest//:main",
+        ":hello-greet",
+        "//cyber/common:log",
+    ],
+)
+
 cc_binary(
     name = "hello-world",
     srcs = ["hello-world.cc"],

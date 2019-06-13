@@ -36,8 +36,9 @@ cc_test(
         "file_test.cc",
     ],
     deps = [
-        "//cyber",
+        "//cyber/common:file",
         "//cyber/proto:unit_test_cc_proto",
+        "@glog",
         "@gtest//:main",
     ],
 )
@@ -62,7 +63,8 @@ cc_test(
         "log_test.cc",
     ],
     deps = [
-        "//cyber",
+        "//cyber/common:log",
+        "@glog",
         "@gtest//:main",
     ],
 )
@@ -74,6 +76,18 @@ cc_library(
     ],
     deps = [
         #"//cyber/common:log",
+    ],
+)
+
+cc_test(
+    name = "environment_test",
+    size = "small",
+    srcs = [
+        "environment_test.cc",
+    ],
+    deps = [
+        "//cyber/common:environment",
+        "@gtest//:main",
     ],
 )
 
