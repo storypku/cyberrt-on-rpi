@@ -20,7 +20,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "cyber/base/atomic_hash_map.h"
+#include "cyber/base/concurrent_hash_map.h"
 #include "cyber/base/atomic_rw_lock.h"
 #include "cyber/common/log.h"
 #include "cyber/common/macros.h"
@@ -31,7 +31,7 @@ namespace apollo {
 namespace cyber {
 namespace common {
 
-using ::apollo::cyber::base::AtomicHashMap;
+using ::apollo::cyber::base::ConcurrentHashMap;
 using ::apollo::cyber::proto::CyberConfig;
 
 class GlobalData {
@@ -94,13 +94,13 @@ class GlobalData {
   // run mode
   bool is_reality_mode_;
 
-  // These AtomicHashMap may cause race conditions
+  // These ConcurrentHashMap may cause race conditions
   // will be replaced by truely concurrent hashmap w/ locks.
   // RTFM: http://wiki.baidu.com/pages/viewpage.action?pageId=754229817
-  static AtomicHashMap<uint64_t, std::string, 512> node_id_map_;
-  static AtomicHashMap<uint64_t, std::string, 256> channel_id_map_;
-  static AtomicHashMap<uint64_t, std::string, 256> service_id_map_;
-  static AtomicHashMap<uint64_t, std::string, 256> task_id_map_;
+  static ConcurrentHashMap<uint64_t, std::string, 512> node_id_map_;
+  static ConcurrentHashMap<uint64_t, std::string, 256> channel_id_map_;
+  static ConcurrentHashMap<uint64_t, std::string, 256> service_id_map_;
+  static ConcurrentHashMap<uint64_t, std::string, 256> task_id_map_;
 
   DECLARE_SINGLETON(GlobalData)
 };

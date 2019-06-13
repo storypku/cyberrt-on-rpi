@@ -17,4 +17,11 @@ fi
 
 sed "s#ZLIB_PATH#${zlib_dir}#g" WORKSPACE.in > WORKSPACE
 
+udev_dir=$(pkg-config --variable=libdir libudev 2>/dev/null)
+if [ $? -ne 0 ]; then
+    echo "===== Oops! No libudev found by pkg-config. ====="
+    exit 1
+fi
+sed "s#UDEV_PATH#${udev_dir}#g" WORKSPACE.in > WORKSPACE
+
 

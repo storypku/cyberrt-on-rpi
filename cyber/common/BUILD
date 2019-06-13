@@ -86,7 +86,7 @@ cc_library(
         "global_data.h",
     ],
     deps = [
-        "//cyber/base:atomic_hash_map",
+        "//cyber/base:concurrent_hash_map",
         "//cyber/base:atomic_rw_lock",
         "//cyber/common:environment",
         "//cyber/common:file",
