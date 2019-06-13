@@ -32,13 +32,12 @@ namespace apollo {
 namespace cyber {
 namespace common {
 
-AtomicHashMap<uint64_t, std::string, 512> GlobalData::node_id_map_;
-AtomicHashMap<uint64_t, std::string, 256> GlobalData::channel_id_map_;
-AtomicHashMap<uint64_t, std::string, 256> GlobalData::service_id_map_;
-AtomicHashMap<uint64_t, std::string, 256> GlobalData::task_id_map_;
+ConcurrentHashMap<uint64_t, std::string, 512> GlobalData::node_id_map_;
+ConcurrentHashMap<uint64_t, std::string, 256> GlobalData::channel_id_map_;
+ConcurrentHashMap<uint64_t, std::string, 256> GlobalData::service_id_map_;
+ConcurrentHashMap<uint64_t, std::string, 256> GlobalData::task_id_map_;
 
 namespace {
-const char* empty_str_ = "";
 char* program_path() {
   char* path = reinterpret_cast<char*>(malloc(PATH_MAX));
   if (path != nullptr) {
@@ -168,81 +167,73 @@ const CyberConfig& GlobalData::Config() const { return config_; }
 uint64_t GlobalData::RegisterNode(const std::string& node_name) {
   auto id = Hash(node_name);
   if (node_id_map_.Has(id)) {
-    std::string* name = nullptr;
+    std::string name;
     node_id_map_.Get(id, &name);
-    CHECK(node_name == *name) << " Node name hash collision: " << node_name
-                              << " <=> " << *name;
+    CHECK(node_name == name) << " Node name hash collision: " << node_name
+                              << " <=> " << name;
   }
   node_id_map_.Set(id, node_name);
   return id;
 }
 
 std::string GlobalData::GetNodeById(uint64_t id) {
-  std::string* node_name = nullptr;
-  if (node_id_map_.Get(id, &node_name)) {
-    return *node_name;
-  }
-  return empty_str_;
+  std::string node_name;
+  node_id_map_.Get(id, &node_name);
+  return node_name;
 }
 
 uint64_t GlobalData::RegisterChannel(const std::string& channel) {
   auto id = Hash(channel);
   if (channel_id_map_.Has(id)) {
-    std::string* name = nullptr;
+    std::string name;
     channel_id_map_.Get(id, &name);
-    CHECK(channel == *name) << "Channel name hash collision: " << channel
-                            << " <=> " << *name;
+    CHECK(channel == name) << "Channel name hash collision: " << channel
+                            << " <=> " << name;
   }
   channel_id_map_.Set(id, channel);
   return id;
 }
 
 std::string GlobalData::GetChannelById(uint64_t id) {
-  std::string* channel = nullptr;
-  if (channel_id_map_.Get(id, &channel)) {
-    return *channel;
-  }
-  return empty_str_;
+  std::string channel;
+  channel_id_map_.Get(id, &channel);
+  return channel;
 }
 
 uint64_t GlobalData::RegisterService(const std::string& service) {
   auto id = Hash(service);
   if (service_id_map_.Has(id)) {
-    std::string* name = nullptr;
+    std::string name;
     service_id_map_.Get(id, &name);
-    CHECK(service == *name) << "Service name hash collision: " << service
-                            << " <=> " << *name;
+    CHECK(service == name) << "Service name hash collision: " << service
+                            << " <=> " << name;
   }
   service_id_map_.Set(id, service);
   return id;
 }
 
 std::string GlobalData::GetServiceById(uint64_t id) {
-  std::string* service = nullptr;
-  if (service_id_map_.Get(id, &service)) {
-    return *service;
-  }
-  return empty_str_;
+  std::string service;
+  service_id_map_.Get(id, &service);
+  return service;
 }
 
 uint64_t GlobalData::RegisterTaskName(const std::string& task_name) {
   auto id = Hash(task_name);
   if (task_id_map_.Has(id)) {
-    std::string* name = nullptr;
+    std::string name;
     task_id_map_.Get(id, &name);
-    CHECK(task_name == *name) << "Task name hash collision: " << task_name
-                              << " <=> " << *name;
+    CHECK(task_name == name) << "Task name hash collision: " << task_name
+                              << " <=> " << name;
   }
   task_id_map_.Set(id, task_name);
   return id;
 }
 
 std::string GlobalData::GetTaskNameById(uint64_t id) {
-  std::string* task_name = nullptr;
-  if (task_id_map_.Get(id, &task_name)) {
-    return *task_name;
-  }
-  return empty_str_;
+  std::string task_name;
+  task_id_map_.Get(id, &task_name);
+  return task_name;
 }
 
 }  // namespace common
