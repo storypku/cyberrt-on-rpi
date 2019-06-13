@@ -41,6 +41,7 @@ class PerfEventCache {
                          const uint64_t msg_seq);
 
  private:
+  void Shutdown();
   void Start();
   void Run();
 

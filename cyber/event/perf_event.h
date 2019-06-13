@@ -55,9 +55,9 @@ class EventBase {
   virtual void set_channel_id(uint64_t channel_id) {}
 
  protected:
-  int etype_; // event type
-  int eid_;   // event id
-  uint64_t stamp_;
+  int etype_ = 0; // event type
+  int eid_ = 0;   // event id
+  uint64_t stamp_ = 0;
 };
 
 // event_id
@@ -85,9 +85,9 @@ class SchedEvent : public EventBase {
   void set_proc_id(int proc_id) override { proc_id_ = proc_id; }
 
  private:
-  int cr_state_;
-  int proc_id_;
-  uint64_t cr_id_;
+  int cr_state_ = 0;
+  int proc_id_ = 0;
+  uint64_t cr_id_ = 0;
 };
 
 // event_id

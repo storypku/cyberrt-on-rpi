@@ -123,7 +123,14 @@ void PerfEventCache::Start() {
   of_.open(perf_file, std::ios::trunc);
   of_ << Time::Now().ToNanosecond() << std::endl;
   io_thread_ = std::thread(&PerfEventCache::Run, this);
-  io_thread_.detach();
+}
+
+void PerfEventCache::Shutdown() {
+    if (!shutdown_.exchange(true)) {
+        if (io_thread_.joinable()) {
+            io_thread_.join();
+        }
+    }
 }
 
 }  // namespace event
