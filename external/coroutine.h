@@ -20,8 +20,6 @@
 #endif
 #include <ucontext.h>
 
-#include <cstdio>
-
 namespace coroutine {
 
 typedef unsigned routine_t;
@@ -48,6 +46,7 @@ struct Ordinator {
     ucontext_t ctx;
 
     inline Ordinator(size_t ss = STACK_LIMIT) : current(0), stack_size(ss) {
+        getcontext(&ctx);
     }
 
     inline ~Ordinator() {
@@ -60,8 +59,8 @@ struct Ordinator {
 thread_local static Ordinator ordinator;
 
 inline routine_t create(std::function<void()> f) {
-    Routine* routine = new Routine(f);
-
+    Routine* routine = new(std::nothrow) Routine(f);
+    if (routine == nullptr) { return 0; }
     if (ordinator.indexes.empty()) {
         ordinator.routines.push_back(routine);
         return ordinator.routines.size();
@@ -113,7 +112,8 @@ inline int resume(routine_t id) {
         //Before invoking makecontext(), the caller must allocate a new stack
         //for this context and assign its address to ucp->uc_stack,
         //and define a successor context and assign its address to ucp->uc_link.
-        routine->stack = new char[ordinator.stack_size];
+        routine->stack = new(std::nothrow) char[ordinator.stack_size];
+        if (routine->stack == nullptr) { return -3; }
         routine->ctx.uc_stack.ss_sp = routine->stack;
         routine->ctx.uc_stack.ss_size = ordinator.stack_size;
         routine->ctx.uc_link = &ordinator.ctx;
