@@ -57,8 +57,13 @@ cc_test(
     size = "small",
     srcs = ["file/record_file_test.cc"],
     deps = [
-        "//cyber",
+        ":record_file_reader",
+        ":record_file_writer",
+        ":header_builder",
+        "//cyber/common:file",
+        "//cyber/time",
         "//cyber/proto:record_cc_proto",
+        "@glog",
         "@gtest//:main",
     ],
 )

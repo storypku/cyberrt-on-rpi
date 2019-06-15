@@ -25,7 +25,7 @@ namespace apollo {
 namespace cyber {
 namespace record {
 
-int64_t RecordFileBase::CurrentPosition() {
+int64_t RecordFileBase::CurrentPosition() const {
   off_t pos = lseek(fd_, 0, SEEK_CUR);
   if (pos < 0) {
     AERROR << "lseek failed, file: " << path_ << ", fd: " << fd_

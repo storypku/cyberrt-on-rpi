@@ -52,7 +52,7 @@ class RecordFileReader : public RecordFileBase {
   template <typename T>
   bool ReadSection(int64_t size, T* message);
   bool ReadIndex();
-  bool EndOfFile() { return end_of_file_; }
+  bool EndOfFile() const { return end_of_file_; }
 
  private:
   bool ReadHeader();

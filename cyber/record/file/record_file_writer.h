@@ -56,20 +56,20 @@ struct Chunk {
     std::lock_guard<std::mutex> lock(mutex_);
     SingleMessage* p_message = body_->add_messages();
     *p_message = message;
+    auto msg_stamp = message.time();
     if (header_.begin_time() == 0) {
-      header_.set_begin_time(message.time());
+      header_.set_begin_time(msg_stamp);
+    } else if (header_.begin_time() > msg_stamp) {
+      header_.set_begin_time(msg_stamp);
     }
-    if (header_.begin_time() > message.time()) {
-      header_.set_begin_time(message.time());
-    }
-    if (header_.end_time() < message.time()) {
-      header_.set_end_time(message.time());
+    if (header_.end_time() < msg_stamp) {
+      header_.set_end_time(msg_stamp);
     }
     header_.set_message_number(header_.message_number() + 1);
     header_.set_raw_size(header_.raw_size() + message.content().size());
   }
 
-  inline bool empty() { return header_.message_number() == 0; }
+  inline bool empty() const { return header_.message_number() == 0; }
 
   std::mutex mutex_;
   ChunkHeader header_;
@@ -135,7 +135,11 @@ bool RecordFileWriter::WriteSection(const T& message) {
            << ", actual count: " << count;
     return false;
   }
-  ZeroCopyOutputStream* raw_output = new FileOutputStream(fd_);
+  ZeroCopyOutputStream* raw_output = new (std::nothrow) FileOutputStream(fd_);
+  if (raw_output == nullptr) {
+    AERROR << "Failed to allocate memory for FileOutputStream, fd: " << fd_;
+    return false;
+  }
   message.SerializeToZeroCopyStream(raw_output);
   delete raw_output;
   if (type == SectionType::SECTION_HEADER) {
