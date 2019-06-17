@@ -51,7 +51,7 @@ class AllLatest : public DataFusion<M0, M1, M2, M3> {
         buffer_m3_(buffer_3),
         buffer_fusion_(buffer_m0_.channel_id(),
                        new CacheBuffer<std::shared_ptr<FusionDataType>>(
-                           buffer_0.Buffer()->Capacity() - uint64_t(1))) {
+                           buffer_0.Capacity() - uint64_t(1))) {
     buffer_m0_.Buffer()->SetFusionCallback(
         [this](const std::shared_ptr<M0>& m0) {
           std::shared_ptr<M1> m1;
@@ -63,8 +63,7 @@ class AllLatest : public DataFusion<M0, M1, M2, M3> {
           }
 
           auto data = std::make_shared<FusionDataType>(m0, m1, m2, m3);
-          std::lock_guard<std::mutex> lg(buffer_fusion_.Buffer()->Mutex());
-          buffer_fusion_.Buffer()->Fill(data);
+          buffer_fusion_.Fill(data);
         });
   }
 
@@ -103,7 +102,7 @@ class AllLatest<M0, M1, M2, NullType> : public DataFusion<M0, M1, M2> {
         buffer_m2_(buffer_2),
         buffer_fusion_(buffer_m0_.channel_id(),
                        new CacheBuffer<std::shared_ptr<FusionDataType>>(
-                           buffer_0.Buffer()->Capacity() - uint64_t(1))) {
+                           buffer_0.Capacity() - uint64_t(1))) {
     buffer_m0_.Buffer()->SetFusionCallback(
         [this](const std::shared_ptr<M0>& m0) {
           std::shared_ptr<M1> m1;
@@ -113,8 +112,7 @@ class AllLatest<M0, M1, M2, NullType> : public DataFusion<M0, M1, M2> {
           }
 
           auto data = std::make_shared<FusionDataType>(m0, m1, m2);
-          std::lock_guard<std::mutex> lg(buffer_fusion_.Buffer()->Mutex());
-          buffer_fusion_.Buffer()->Fill(data);
+          buffer_fusion_.Fill(data);
         });
   }
 
@@ -148,7 +146,7 @@ class AllLatest<M0, M1, NullType, NullType> : public DataFusion<M0, M1> {
         buffer_m1_(buffer_1),
         buffer_fusion_(buffer_m0_.channel_id(),
                        new CacheBuffer<std::shared_ptr<FusionDataType>>(
-                           buffer_0.Buffer()->Capacity() - uint64_t(1))) {
+                           buffer_0.Capacity() - uint64_t(1))) {
     buffer_m0_.Buffer()->SetFusionCallback(
         [this](const std::shared_ptr<M0>& m0) {
           std::shared_ptr<M1> m1;
@@ -157,8 +155,7 @@ class AllLatest<M0, M1, NullType, NullType> : public DataFusion<M0, M1> {
           }
 
           auto data = std::make_shared<FusionDataType>(m0, m1);
-          std::lock_guard<std::mutex> lg(buffer_fusion_.Buffer()->Mutex());
-          buffer_fusion_.Buffer()->Fill(data);
+          buffer_fusion_.Fill(data);
         });
   }
 

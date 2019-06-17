@@ -147,7 +147,11 @@ cc_test(
         "fusion/all_latest_test.cc",
     ],
     deps = [
-        "//cyber",
+        "//cyber/common",
+        "//cyber/message:raw_message",
+        ":data_dispatcher",
+        ":all_latest",
+        "@glog",
         "@gtest//:main",
     ],
 )

@@ -34,15 +34,15 @@ TEST(ChannelBufferTest, Fetch) {
   std::shared_ptr<int> msg;
   uint64_t index = 0;
   EXPECT_FALSE(buffer->Fetch(&index, msg));
-  buffer->Buffer()->Fill(std::make_shared<int>(1));
+  buffer->Fill(std::make_shared<int>(1));
   EXPECT_TRUE(buffer->Fetch(&index, msg));
   EXPECT_EQ(1, *msg);
   EXPECT_EQ(1, index);
   index++;
   EXPECT_FALSE(buffer->Fetch(&index, msg));
-  buffer->Buffer()->Fill(std::make_shared<int>(2));
-  buffer->Buffer()->Fill(std::make_shared<int>(3));
-  buffer->Buffer()->Fill(std::make_shared<int>(4));
+  buffer->Fill(std::make_shared<int>(2));
+  buffer->Fill(std::make_shared<int>(3));
+  buffer->Fill(std::make_shared<int>(4));
   EXPECT_TRUE(buffer->Fetch(&index, msg));
   EXPECT_EQ(4, *msg);
   EXPECT_EQ(4, index);
@@ -57,13 +57,13 @@ TEST(ChannelBufferTest, Latest) {
   std::shared_ptr<int> msg;
   EXPECT_FALSE(buffer->Latest(msg));
 
-  buffer->Buffer()->Fill(std::make_shared<int>(1));
+  buffer->Fill(std::make_shared<int>(1));
   EXPECT_TRUE(buffer->Latest(msg));
   EXPECT_EQ(1, *msg);
   EXPECT_TRUE(buffer->Latest(msg));
   EXPECT_EQ(1, *msg);
 
-  buffer->Buffer()->Fill(std::make_shared<int>(2));
+  buffer->Fill(std::make_shared<int>(2));
   EXPECT_TRUE(buffer->Latest(msg));
   EXPECT_EQ(2, *msg);
 }
@@ -73,13 +73,13 @@ TEST(ChannelBufferTest, FetchMulti) {
   auto buffer = std::make_shared<ChannelBuffer<int>>(channel0, cache_buffer);
   std::vector<std::shared_ptr<int>> vector;
   EXPECT_FALSE(buffer->FetchMulti(1, &vector));
-  buffer->Buffer()->Fill(std::make_shared<int>(1));
+  buffer->Fill(std::make_shared<int>(1));
   EXPECT_TRUE(buffer->FetchMulti(1, &vector));
   EXPECT_EQ(1, vector.size());
   EXPECT_EQ(1, *vector[0]);
 
   vector.clear();
-  buffer->Buffer()->Fill(std::make_shared<int>(2));
+  buffer->Fill(std::make_shared<int>(2));
   EXPECT_TRUE(buffer->FetchMulti(1, &vector));
   EXPECT_EQ(1, vector.size());
   EXPECT_EQ(2, *vector[0]);

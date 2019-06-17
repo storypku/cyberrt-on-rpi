@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "cyber/common/log.h"
-#include "cyber/cyber.h"
-#include "cyber/data/data_visitor.h"
+#include "cyber/message/raw_message.h"
+// #include "cyber/data/data_visitor.h"
 #include "cyber/data/fusion/all_latest.h"
 
 namespace apollo {
@@ -29,8 +29,8 @@ namespace cyber {
 namespace data {
 
 using apollo::cyber::message::RawMessage;
-using apollo::cyber::proto::RoleAttributes;
-std::hash<std::string> str_hash;
+// using apollo::cyber::proto::RoleAttributes;
+// std::hash<std::string> str_hash;
 
 TEST(AllLatestTest, two_channels) {
   auto cache0 = new CacheBuffer<std::shared_ptr<RawMessage>>(10);

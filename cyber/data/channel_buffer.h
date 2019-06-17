@@ -36,6 +36,7 @@ template <typename T>
 class ChannelBuffer {
  public:
   using BufferType = CacheBuffer<std::shared_ptr<T>>;
+
   ChannelBuffer(uint64_t channel_id, BufferType* buffer)
       : channel_id_(channel_id), buffer_(buffer) {}
 
@@ -47,6 +48,13 @@ class ChannelBuffer {
 
   uint64_t channel_id() const { return channel_id_; }
   std::shared_ptr<BufferType> Buffer() const { return buffer_; }
+
+  uint64_t Capacity() const { return buffer_->Capacity(); }
+
+  void Fill(const std::shared_ptr<T>& data) {
+    std::lock_guard<std::mutex> lg(buffer_->Mutex());
+    buffer_->Fill(data);
+  }
 
  private:
   uint64_t channel_id_;
