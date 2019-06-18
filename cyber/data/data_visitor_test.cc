@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "cyber/common/log.h"
-#include "cyber/cyber.h"
+// #include "cyber/cyber.h"
 #include "cyber/message/raw_message.h"
 
 namespace apollo {
@@ -30,7 +30,7 @@ namespace cyber {
 namespace data {
 
 using apollo::cyber::message::RawMessage;
-using apollo::cyber::proto::RoleAttributes;
+// using apollo::cyber::proto::RoleAttributes;
 std::hash<std::string> str_hash;
 
 auto channel0 = str_hash("/channel0");

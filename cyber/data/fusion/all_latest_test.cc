@@ -51,6 +51,7 @@ TEST(AllLatestTest, two_channels) {
   EXPECT_FALSE(fusion.Fusion(&index, m0, m1));
   cache0->Fill(std::make_shared<RawMessage>("0-1"));
   EXPECT_TRUE(fusion.Fusion(&index, m0, m1));
+  EXPECT_EQ(index, 1);
   index++;
   EXPECT_EQ(std::string("0-1"), m0->message);
   EXPECT_EQ(std::string("1-0"), m1->message);
@@ -59,6 +60,7 @@ TEST(AllLatestTest, two_channels) {
   // use 0-2 and lateste m1
   cache0->Fill(std::make_shared<RawMessage>("0-2"));
   EXPECT_TRUE(fusion.Fusion(&index, m0, m1));
+  EXPECT_EQ(index, 2);
   index++;
   EXPECT_EQ(std::string("0-2"), m0->message);
   EXPECT_EQ(std::string("1-0"), m1->message);
@@ -75,8 +77,11 @@ TEST(AllLatestTest, two_channels) {
   }
   // EXPECT_TRUE(fusion.buffer_fusion_->Buffer()->Full());
   EXPECT_TRUE(fusion.Fusion(&index, m0, m1));
+  EXPECT_EQ(index, 102);
+
   index++;
   EXPECT_EQ(std::string("0-102"), m0->message);
+  EXPECT_EQ(std::string("1-1"), m1->message);
 }
 
 TEST(AllLatestTest, three_channels) {
@@ -104,6 +109,7 @@ TEST(AllLatestTest, three_channels) {
   EXPECT_FALSE(fusion.Fusion(&index, m0, m1, m2));
   cache0->Fill(std::make_shared<RawMessage>("0-1"));
   EXPECT_TRUE(fusion.Fusion(&index, m0, m1, m2));
+  EXPECT_EQ(index, 1);
   index++;
   EXPECT_EQ(std::string("0-1"), m0->message);
   EXPECT_EQ(std::string("1-0"), m1->message);
@@ -140,6 +146,7 @@ TEST(AllLatestTest, four_channels) {
   EXPECT_FALSE(fusion.Fusion(&index, m0, m1, m2, m3));
   cache0->Fill(std::make_shared<RawMessage>("0-1"));
   EXPECT_TRUE(fusion.Fusion(&index, m0, m1, m2, m3));
+  EXPECT_EQ(index, 1);
   index++;
   EXPECT_EQ(std::string("0-1"), m0->message);
   EXPECT_EQ(std::string("1-0"), m1->message);

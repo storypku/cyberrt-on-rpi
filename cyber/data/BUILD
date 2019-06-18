@@ -72,7 +72,13 @@ cc_test(
         "data_visitor_test.cc",
     ],
     deps = [
-        "//cyber",
+        "//cyber/common",
+        "//cyber/message:raw_message",
+        ":data_dispatcher",
+        ":data_visitor",
+        ":data_visitor_base",
+        ":all_latest",
+        "@glog",
         "@gtest//:main",
     ],
 )
