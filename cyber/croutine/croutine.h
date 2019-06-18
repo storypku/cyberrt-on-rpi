@@ -45,67 +45,68 @@ class CRoutine {
   // static interfaces
   static void Yield();
   static void Yield(const RoutineState &state);
-  static void SetMainContext(const std::shared_ptr<RoutineContext> &context);
-  static CRoutine *GetCurrentRoutine();
-  static char **GetMainStack();
+  static CRoutine *GetCurrentRoutine() { return current_routine_; }
+  static char **GetMainStack() { return &main_stack_; }
 
   // public interfaces
-  bool Acquire();
-  void Release();
+  bool Acquire() {
+    return !lock_.test_and_set(std::memory_order_acquire);
+  }
+
+  void Release() {
+    return lock_.clear(std::memory_order_release);
+  }
 
   // It is caller's responsibility to check if state_ is valid before calling
   // SetUpdateFlag().
-  void SetUpdateFlag();
+  void SetUpdateFlag() {
+    updated_.clear(std::memory_order_release);
+  }
 
   // acquire && release should be called before Resume
   // when work-steal like mechanism used
   RoutineState Resume();
   RoutineState UpdateState();
-  RoutineContext *GetContext();
-  char **GetStack();
 
-  void Run();
+  RoutineContext *GetContext() { return context_.get(); }
+  char **GetStack() { return &(context_->sp); }
+
+  void Run() { func_(); }
   void Stop();
   void Wake();
   void HangUp();
   void Sleep(const Duration &sleep_duration);
 
   // getter and setter
-  RoutineState state() const;
-  void set_state(const RoutineState &state);
+  RoutineState state() const { return state_; }
+  void set_state(const RoutineState &state) { state_ = state; }
 
-  uint64_t id() const;
-  void set_id(uint64_t id);
+  uint64_t id() const { return id_; }
+  void set_id(uint64_t id) { id_ = id; }
 
-  const std::string &name() const;
-  void set_name(const std::string &name);
+  const std::string &name() const { return name_; }
+  void set_name(const std::string &name) { name_ = name; }
 
-  int processor_id() const;
-  void set_processor_id(int processor_id);
+  int processor_id() const { return processor_id_; }
+  void set_processor_id(int processor_id) { processor_id_ = processor_id; }
 
-  uint32_t priority() const;
-  void set_priority(uint32_t priority);
+  uint32_t priority() const { return priority_; }
+  void set_priority(uint32_t priority) { priority_ = priority; }
 
-  std::chrono::steady_clock::time_point wake_time() const;
+  std::chrono::steady_clock::time_point wake_time() const { return wake_time_; }
 
-  void set_group_name(const std::string &group_name) {
-    group_name_ = group_name;
-  }
-
+  void set_group_name(const std::string &group_name) { group_name_ = group_name; }
   const std::string &group_name() { return group_name_; }
 
  private:
   CRoutine(CRoutine &) = delete;
   CRoutine &operator=(CRoutine &) = delete;
 
-  std::string name_;
   std::chrono::steady_clock::time_point wake_time_ =
       std::chrono::steady_clock::now();
 
   RoutineFunc func_;
   RoutineState state_;
-
-  std::shared_ptr<RoutineContext> context_;
 
   std::atomic_flag lock_ = ATOMIC_FLAG_INIT;
   std::atomic_flag updated_ = ATOMIC_FLAG_INIT;
@@ -116,8 +117,10 @@ class CRoutine {
   uint32_t priority_ = 0;
   uint64_t id_ = 0;
 
+  std::string name_;
   std::string group_name_;
 
+  std::shared_ptr<RoutineContext> context_;
   static thread_local CRoutine *current_routine_;
   static thread_local char *main_stack_;
 };
@@ -125,52 +128,19 @@ class CRoutine {
 inline void CRoutine::Yield(const RoutineState &state) {
   auto routine = GetCurrentRoutine();
   routine->set_state(state);
-  SwapContext(GetCurrentRoutine()->GetStack(), GetMainStack());
+  SwapContext(routine->GetStack(), GetMainStack());
 }
 
 inline void CRoutine::Yield() {
   SwapContext(GetCurrentRoutine()->GetStack(), GetMainStack());
 }
 
-inline CRoutine *CRoutine::GetCurrentRoutine() { return current_routine_; }
-
-inline char **CRoutine::GetMainStack() { return &main_stack_; }
-
-inline RoutineContext *CRoutine::GetContext() { return context_.get(); }
-
-inline char **CRoutine::GetStack() { return &(context_->sp); }
-
-inline void CRoutine::Run() { func_(); }
-
-inline void CRoutine::set_state(const RoutineState &state) { state_ = state; }
-
-inline RoutineState CRoutine::state() const { return state_; }
-
-inline std::chrono::steady_clock::time_point CRoutine::wake_time() const {
-  return wake_time_;
-}
-
 inline void CRoutine::Wake() { state_ = RoutineState::READY; }
-
 inline void CRoutine::HangUp() { CRoutine::Yield(RoutineState::DATA_WAIT); }
 
 inline void CRoutine::Sleep(const Duration &sleep_duration) {
   wake_time_ = std::chrono::steady_clock::now() + sleep_duration;
   CRoutine::Yield(RoutineState::SLEEP);
-}
-
-inline uint64_t CRoutine::id() const { return id_; }
-
-inline void CRoutine::set_id(uint64_t id) { id_ = id; }
-
-inline const std::string &CRoutine::name() const { return name_; }
-
-inline void CRoutine::set_name(const std::string &name) { name_ = name; }
-
-inline int CRoutine::processor_id() const { return processor_id_; }
-
-inline void CRoutine::set_processor_id(int processor_id) {
-  processor_id_ = processor_id;
 }
 
 inline RoutineState CRoutine::UpdateState() {
@@ -188,22 +158,6 @@ inline RoutineState CRoutine::UpdateState() {
     }
   }
   return state_;
-}
-
-inline uint32_t CRoutine::priority() const { return priority_; }
-
-inline void CRoutine::set_priority(uint32_t priority) { priority_ = priority; }
-
-inline bool CRoutine::Acquire() {
-  return !lock_.test_and_set(std::memory_order_acquire);
-}
-
-inline void CRoutine::Release() {
-  return lock_.clear(std::memory_order_release);
-}
-
-inline void CRoutine::SetUpdateFlag() {
-  updated_.clear(std::memory_order_release);
 }
 
 }  // namespace croutine

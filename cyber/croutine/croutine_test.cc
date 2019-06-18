@@ -15,19 +15,25 @@
  *****************************************************************************/
 #include "cyber/croutine/croutine.h"
 
+// #include "cyber/cyber.h"
+// #include "cyber/init.h"
 #include "cyber/common/global_data.h"
-#include "cyber/cyber.h"
-#include "cyber/init.h"
+#include "cyber/state.h"
+#include "cyber/common/log.h"
 #include "gtest/gtest.h"
 
 namespace apollo {
 namespace cyber {
 namespace croutine {
 
+using apollo::cyber::common::GlobalData;
+
 void function() { CRoutine::Yield(RoutineState::IO_WAIT); }
+void Init(const char* program) { SetState(STATE_INITIALIZED); }
 
 TEST(Croutine, croutinetest) {
-  apollo::cyber::Init("croutine_test");
+  // apollo::cyber::Init("croutine_test");
+  Init("croutine_test");
   std::shared_ptr<CRoutine> cr = std::make_shared<CRoutine>(function);
   auto id = GlobalData::RegisterTaskName("croutine");
   cr->set_id(id);

@@ -70,7 +70,9 @@ cc_test(
         "croutine_test.cc",
     ],
     deps = [
-        "//cyber",
+        "//cyber/croutine",
+        "//cyber/common",
+        "@glog",
         "@gtest//:main",
     ],
 )
