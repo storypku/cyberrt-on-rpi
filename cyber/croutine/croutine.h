@@ -72,11 +72,13 @@ class CRoutine {
   char **GetStack() { return &(context_->sp); }
 
   void Run() { func_(); }
-  void Stop();
-  void Wake();
-  void HangUp();
-  void Sleep(const Duration &sleep_duration);
-
+  void Stop() { force_stop_ = true; }
+  void Wake() { state_ = RoutineState::READY; }
+  void HangUp() { CRoutine::Yield(RoutineState::DATA_WAIT); }
+  void Sleep(const Duration &sleep_duration) {
+    wake_time_ = std::chrono::steady_clock::now() + sleep_duration;
+    CRoutine::Yield(RoutineState::SLEEP);
+  }
   // getter and setter
   RoutineState state() const { return state_; }
   void set_state(const RoutineState &state) { state_ = state; }
@@ -133,14 +135,6 @@ inline void CRoutine::Yield(const RoutineState &state) {
 
 inline void CRoutine::Yield() {
   SwapContext(GetCurrentRoutine()->GetStack(), GetMainStack());
-}
-
-inline void CRoutine::Wake() { state_ = RoutineState::READY; }
-inline void CRoutine::HangUp() { CRoutine::Yield(RoutineState::DATA_WAIT); }
-
-inline void CRoutine::Sleep(const Duration &sleep_duration) {
-  wake_time_ = std::chrono::steady_clock::now() + sleep_duration;
-  CRoutine::Yield(RoutineState::SLEEP);
 }
 
 inline RoutineState CRoutine::UpdateState() {

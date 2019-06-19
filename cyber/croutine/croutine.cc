@@ -91,8 +91,6 @@ RoutineState CRoutine::Resume() {
   return state_;
 }
 
-void CRoutine::Stop() { force_stop_ = true; }
-
 }  // namespace croutine
 }  // namespace cyber
 }  // namespace apollo

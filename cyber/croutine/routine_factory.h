@@ -144,7 +144,7 @@ RoutineFactory CreateRoutineFactory(
 template <typename Function>
 RoutineFactory CreateRoutineFactory(Function&& f) {
   RoutineFactory factory;
-  factory.create_routine = [f = std::forward<Function&&>(f)]() { return f; };
+  factory.create_routine = [f2 = std::forward<Function&&>(f)]() { return f2; };
   return factory;
 }
 
