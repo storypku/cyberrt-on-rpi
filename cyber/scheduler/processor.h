@@ -44,14 +44,14 @@ class Processor {
   void Stop();
   void BindContext(const std::shared_ptr<ProcessorContext>& context);
   void SetSchedAffinity(const std::vector<int>&, const std::string&, int);
-  void SetSchedPolicy(std::string spolicy, int sched_priority);
+  void SetSchedPolicy(const std::string& spolicy, int sched_priority);
 
  private:
   std::shared_ptr<ProcessorContext> context_;
 
   std::condition_variable cv_ctx_;
-  std::once_flag thread_flag_;
   std::mutex mtx_ctx_;
+  std::once_flag thread_flag_;
   std::thread thread_;
 
   std::atomic<pid_t> tid_{-1};

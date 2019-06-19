@@ -40,31 +40,30 @@ void Processor::SetSchedAffinity(const std::vector<int> &cpus,
   cpu_set_t set;
   CPU_ZERO(&set);
 
-  if (cpus.size()) {
-    if (!affinity.compare("range")) {
-      for (const auto cpu : cpus) {
-        CPU_SET(cpu, &set);
-      }
-      pthread_setaffinity_np(thread_.native_handle(), sizeof(set), &set);
-    } else if (!affinity.compare("1to1")) {
-      CPU_SET(cpus[p], &set);
-      pthread_setaffinity_np(thread_.native_handle(), sizeof(set), &set);
+  if (cpus.empty()) {
+    return;
+  }
+  if (!affinity.compare("range")) {
+    for (const auto cpu : cpus) {
+      CPU_SET(cpu, &set);
     }
+    pthread_setaffinity_np(thread_.native_handle(), sizeof(set), &set);
+  } else if (!affinity.compare("1to1")) {
+    CPU_SET(cpus[p], &set);
+    pthread_setaffinity_np(thread_.native_handle(), sizeof(set), &set);
   }
 }
 
-void Processor::SetSchedPolicy(std::string spolicy, int sched_priority) {
+void Processor::SetSchedPolicy(const std::string& spolicy, int sched_priority) {
   struct sched_param sp;
-  int policy;
-
   memset(reinterpret_cast<void *>(&sp), 0, sizeof(sp));
   sp.sched_priority = sched_priority;
 
   if (!spolicy.compare("SCHED_FIFO")) {
-    policy = SCHED_FIFO;
+    int policy = SCHED_FIFO;
     pthread_setschedparam(thread_.native_handle(), policy, &sp);
   } else if (!spolicy.compare("SCHED_RR")) {
-    policy = SCHED_RR;
+    int policy = SCHED_RR;
     pthread_setschedparam(thread_.native_handle(), policy, &sp);
   } else if (!spolicy.compare("SCHED_OTHER")) {
     // Set normal thread nice value.
@@ -84,7 +83,7 @@ void Processor::Run() {
       auto croutine = context_->NextRoutine();
       if (croutine) {
         croutine->Resume();
-        croutine->Release();
+        croutine->Release(); // Where is Acquire() ???
       } else {
         context_->Wait();
       }
