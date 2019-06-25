@@ -115,10 +115,11 @@ inline uint64_t GpsToUnixNanoseconds(uint64_t gps_nanoseconds) {
 inline uint64_t StringToUnixSeconds(
     const std::string& time_str,
     const std::string& format_str = "%Y-%m-%d %H:%M:%S") {
-  struct tm itm = {};
+  struct tm itm;
   strptime(time_str.c_str(), format_str.c_str(), &itm);
+  itm.tm_isdst = -1;
   time_t time = mktime(&itm);
-  return (uint64_t)time;
+  return static_cast<uint64_t>(time);
 }
 
 inline std::string UnixSecondsToString(

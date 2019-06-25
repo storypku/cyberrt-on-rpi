@@ -45,6 +45,13 @@ http_archive(
 )
 
 new_local_repository(
+    name = "fastrtps",
+    build_file = "external/fastrtps.BUILD",
+    path = "/usr/local/fastrtps",
+)
+
+
+new_local_repository(
     name = "zlib",
     build_file = "external/zlib.BUILD",
     # pkg-config --variable=libdir zlib
