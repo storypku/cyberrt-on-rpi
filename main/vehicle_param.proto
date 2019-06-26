@@ -1,0 +1,42 @@
+syntax = "proto2";
+
+package vp.common.config;
+
+message VehicleParam {
+    enum VehicleBrand {
+        LINCOLN_MKZ = 0;
+        GEM = 1;
+    }
+
+    optional VehicleBrand brand = 1;
+    // Car center point is car reference point, i.e., center of rear axle.
+    optional float front_edge_to_center = 2;
+    optional float back_edge_to_center = 3;
+    optional float left_edge_to_center = 4;
+    optional float right_edge_to_center = 5;
+
+    optional float length = 6;
+    optional float width = 7;
+    optional float height = 8;
+
+    optional float min_turn_radius = 9;
+    optional float max_acceleration = 10;
+    optional float max_deceleration = 11;
+
+    // The following items are used to compute trajectory constraints in
+    // planning/control/canbus,
+    // vehicle max steer angle
+    optional float max_steer_angle = 12;
+    // vehicle max steer rate; how fast can the steering wheel turn.
+    optional float max_steer_angle_rate = 13;
+    // vehicle min steer rate;
+    optional float min_steer_angle_rate = 14;
+    // ratio between the turn of steering wheel and the turn of wheels
+    optional float steer_ratio = 15;
+    // the distance between the front and back wheels
+    optional float wheel_base = 16;
+    optional float wheel_track = 17;
+    // Tire effective rolling radius (vertical distance between the wheel center
+    // and the ground).
+    optional float wheel_rolling_radius = 18;
+}
