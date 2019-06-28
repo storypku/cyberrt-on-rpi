@@ -50,6 +50,7 @@ class SchedulerChoreography : public Scheduler {
 
   int32_t choreography_processor_prio_;
   int32_t pool_processor_prio_;
+  uint32_t task_pool_size_ = 0;
 
   std::string choreography_affinity_;
   std::string pool_affinity_;

@@ -35,7 +35,7 @@ using apollo::cyber::event::PerfEventCache;
 using apollo::cyber::event::SchedPerf;
 
 std::shared_ptr<CRoutine> ChoreographyContext::NextRoutine() {
-  if (unlikely(stop_)) {
+  if (unlikely(stop_.load())) {
     return nullptr;
   }
 
@@ -86,7 +86,7 @@ void ChoreographyContext::RemoveCRoutine(uint64_t crid) {
   for (auto it = cr_queue_.begin(); it != cr_queue_.end();) {
     auto cr = it->second;
     if (cr->id() == crid) {
-      cr->Stop();
+      cr->Stop(); // TODO: should force_stop_ be atomic?
       it = cr_queue_.erase(it);
       cr->Release();
       return;

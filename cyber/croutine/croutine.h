@@ -146,7 +146,8 @@ inline RoutineState CRoutine::UpdateState() {
   }
 
   // Asynchronous Event Mechanism
-  if (!updated_.test_and_set(std::memory_order_release)) {
+  // if (!updated_.test_and_set(std::memory_order_release)) { LIUJIAMING
+  if (!updated_.test_and_set(std::memory_order_acquire)) {
     if (state_ == RoutineState::DATA_WAIT || state_ == RoutineState::IO_WAIT) {
       state_ = RoutineState::READY;
     }

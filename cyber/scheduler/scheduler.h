@@ -35,7 +35,7 @@
 #include "cyber/croutine/croutine.h"
 #include "cyber/croutine/routine_factory.h"
 // #include "cyber/proto/choreography_conf.pb.h"
-#include "cyber/scheduler/common/mutex_wrapper.h"
+// #include "cyber/scheduler/common/mutex_wrapper.h"
 
 namespace apollo {
 namespace cyber {
@@ -52,6 +52,8 @@ using apollo::cyber::proto::InnerThread;
 class Processor;
 class ProcessorContext;
 
+using MutexWrapper = std::shared_ptr<std::mutex>;
+
 class Scheduler {
  public:
   virtual ~Scheduler() {}
@@ -63,7 +65,6 @@ class Scheduler {
   bool NotifyTask(uint64_t crid);
 
   void Shutdown();
-  uint32_t TaskPoolSize() const { return task_pool_size_; }
 
   virtual bool RemoveTask(const std::string& name) = 0;
 
@@ -74,8 +75,7 @@ class Scheduler {
   virtual bool NotifyProcessor(uint64_t crid) = 0;
   virtual bool RemoveCRoutine(uint64_t crid) = 0;
 
-  void SetInnerThreadConfs(
-      const std::unordered_map<std::string, InnerThread>& confs) {
+  void SetInnerThreadConfs(const std::unordered_map<std::string, InnerThread>& confs) {
     inner_thr_confs_ = confs;
   }
 
@@ -83,8 +83,8 @@ class Scheduler {
   Scheduler() : stop_(false) {}
   void ParseCpuset(const std::string&, std::vector<int>*);
 
-  AtomicHashMap<uint64_t, MutexWrapper*> id_map_mutex_;
   std::mutex cr_wl_mtx_;
+  std::unordered_map<uint64_t, MutexWrapper> id_map_mutex_;
 
   AtomicRWLock id_cr_lock_;
   std::unordered_map<uint64_t, std::shared_ptr<CRoutine>> id_cr_;
@@ -95,7 +95,6 @@ class Scheduler {
 
   std::string process_level_cpuset_;
   uint32_t proc_num_ = 0;
-  uint32_t task_pool_size_ = 0;
   std::atomic<bool> stop_;
 };
 

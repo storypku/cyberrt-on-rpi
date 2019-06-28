@@ -37,12 +37,13 @@ Processor::~Processor() { Stop(); }
 
 void Processor::SetSchedAffinity(const std::vector<int> &cpus,
                             const std::string &affinity, int p) {
-  cpu_set_t set;
-  CPU_ZERO(&set);
-
   if (cpus.empty()) {
     return;
   }
+
+  cpu_set_t set;
+  CPU_ZERO(&set);
+
   if (!affinity.compare("range")) {
     for (const auto cpu : cpus) {
       CPU_SET(cpu, &set);
@@ -78,18 +79,17 @@ void Processor::Run() {
   tid_.store(static_cast<int>(syscall(SYS_gettid)));
   AINFO << "processor_tid: " << tid_;
 
+  if (unlikely(context_ == nullptr)) {
+    return;
+  }
+
   while (likely(running_.load())) {
-    if (likely(context_ != nullptr)) {
-      auto croutine = context_->NextRoutine();
-      if (croutine) {
-        croutine->Resume();
-        croutine->Release(); // Where is Acquire() ???
-      } else {
-        context_->Wait();
-      }
+    auto croutine = context_->NextRoutine();
+    if (croutine) {
+      croutine->Resume();
+      croutine->Release(); // Acquire() was done in NextRoutine().
     } else {
-      std::unique_lock<std::mutex> lk(mtx_ctx_);
-      cv_ctx_.wait_for(lk, std::chrono::milliseconds(10));
+      context_->Wait();
     }
   }
 }
@@ -103,16 +103,17 @@ void Processor::Stop() {
     context_->Shutdown();
   }
 
-  cv_ctx_.notify_one();
   if (thread_.joinable()) {
     thread_.join();
   }
 }
 
 void Processor::BindContext(const std::shared_ptr<ProcessorContext> &context) {
-  context_ = context;
   std::call_once(thread_flag_,
-                 [this]() { thread_ = std::thread(&Processor::Run, this); });
+                 [this, context]() {
+                   this->context_ = context;
+                   this->thread_ = std::thread(&Processor::Run, this);
+                 });
 }
 
 }  // namespace scheduler

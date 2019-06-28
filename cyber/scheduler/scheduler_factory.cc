@@ -42,45 +42,38 @@ using apollo::cyber::common::PathExists;
 using apollo::cyber::common::WorkRoot;
 
 namespace {
-std::atomic<Scheduler*> instance = {nullptr};
-std::mutex mutex;
+std::once_flag scheduler_once_flag;
+Scheduler* scheduler_instance;
 }  // namespace
 
-Scheduler* Instance() {
-  Scheduler* obj = instance.load(std::memory_order_acquire);
-  if (obj == nullptr) {
-    std::lock_guard<std::mutex> lock(mutex);
-    obj = instance.load(std::memory_order_relaxed);
-    if (obj == nullptr) {
-      std::string policy("classic");
-      std::string conf("conf/");
-      conf.append(GlobalData::Instance()->ProcessGroup()).append(".conf");
-      auto cfg_file = GetAbsolutePath(WorkRoot(), conf);
-      apollo::cyber::proto::CyberConfig cfg;
-      std::unordered_map<std::string, InnerThread> inner_thr_confs;
-      if (PathExists(cfg_file) && GetProtoFromFile(cfg_file, &cfg)) {
-        policy = cfg.scheduler_conf().policy();
-      } else {
-        AWARN << "No sched conf found, use default conf.";
-      }
-      if (!policy.compare("classic")) {
-        obj = new SchedulerClassic();
-      } else if (!policy.compare("choreography")) {
-        obj = new SchedulerChoreography();
-      } else {
-        AWARN << "Invalid scheduler policy: " << policy;
-        obj = new SchedulerClassic();
-      }
-      instance.store(obj, std::memory_order_release);
+Scheduler* Instance() { // TODO: complete scheduler cfg
+  std::call_once(scheduler_once_flag, [&]() {
+    std::string policy("classic");
+    std::string conf("conf/");
+    conf.append(GlobalData::Instance()->ProcessGroup()).append(".conf");
+    auto cfg_file = GetAbsolutePath(WorkRoot(), conf);
+    apollo::cyber::proto::CyberConfig cfg;
+    if (PathExists(cfg_file) && GetProtoFromFile(cfg_file, &cfg)) {
+      policy = cfg.scheduler_conf().policy();
+    } else {
+      AWARN << "No sched conf found, use default conf.";
     }
-  }
-  return obj;
+    if (!policy.compare("classic")) {
+      scheduler_instance = new SchedulerClassic();
+    } else if (!policy.compare("choreography")) {
+      scheduler_instance = new SchedulerChoreography();
+    } else {
+      AWARN << "Invalid scheduler policy: " << policy;
+      scheduler_instance = new SchedulerClassic();
+    }
+  });
+  return scheduler_instance;
 }
 
 void CleanUp() {
-  Scheduler* obj = instance.load(std::memory_order_acquire);
-  if (obj != nullptr) {
-    obj->Shutdown();
+  if (scheduler_instance != nullptr) {
+    scheduler_instance->Shutdown();
+    delete scheduler_instance;
   }
 }
 

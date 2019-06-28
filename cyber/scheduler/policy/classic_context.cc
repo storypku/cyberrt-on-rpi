@@ -15,7 +15,6 @@
  *****************************************************************************/
 
 #include "cyber/scheduler/policy/classic_context.h"
-
 #include "cyber/event/perf_event_cache.h"
 
 namespace apollo {
@@ -43,12 +42,12 @@ ClassicContext::ClassicContext(const std::string& group_name) {
 void ClassicContext::InitGroup(const std::string& group_name) {
   multi_pri_rq_ = &cr_group_[group_name];
   lq_ = &rq_locks_[group_name];
-  mtx_wrapper_ = &mtx_wq_[group_name];
-  cw_ = &cv_wq_[group_name];
+  mtx_ptr_ = &mtx_wq_[group_name];
+  cv_ptr_ = &cv_wq_[group_name];
 }
 
 std::shared_ptr<CRoutine> ClassicContext::NextRoutine() {
-  if (unlikely(stop_)) {
+  if (unlikely(stop_.load())) {
     return nullptr;
   }
 
@@ -80,32 +79,27 @@ std::shared_ptr<CRoutine> ClassicContext::NextRoutine() {
 }
 
 void ClassicContext::Wait() {
-  std::unique_lock<std::mutex> lk(mtx_wrapper_->Mutex());
-  if (stop_) {
+  if (stop_.load()) {
     return;
   }
 
+  std::unique_lock<std::mutex> lk(*mtx_ptr_);
   if (unlikely(need_sleep_)) {
     auto duration = wake_time_ - std::chrono::steady_clock::now();
-    cw_->Cv().wait_for(lk, duration);
+    cv_ptr_->wait_for(lk, duration);
     need_sleep_ = false;
   } else {
-    cw_->Cv().wait(lk);
+    cv_ptr_->wait(lk);
   }
 }
 
 void ClassicContext::Shutdown() {
-  {
-    std::lock_guard<std::mutex> lg(mtx_wrapper_->Mutex());
-    if (!stop_) {
-      stop_ = true;
-    }
-  }
-  cw_->Cv().notify_all();
+  stop_.exchange(true);
+  cv_ptr_->notify_all();
 }
 
 void ClassicContext::Notify(const std::string& group_name) {
-  cv_wq_[group_name].Cv().notify_one();
+  cv_wq_[group_name].notify_one();
 }
 
 }  // namespace scheduler

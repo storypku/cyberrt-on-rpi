@@ -59,7 +59,7 @@ bool Scheduler::CreateTask(std::function<void()>&& func,
   }
 
   if (visitor != nullptr) {
-    visitor->RegisterNotifyCallback([this, task_id, name]() {
+    visitor->RegisterNotifyCallback([this, task_id]() {
       this->NotifyTask(task_id);
     });
   }
