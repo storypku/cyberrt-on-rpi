@@ -132,7 +132,7 @@ bool SchedulerClassic::DispatchTask(const std::shared_ptr<CRoutine>& cr) {
       }
       id_cr_.emplace(crid, cr);
     }
-  
+
     const auto& cr_name = cr->name();
     {
       auto iter = cr_confs_.find(cr_name);
@@ -145,12 +145,12 @@ bool SchedulerClassic::DispatchTask(const std::shared_ptr<CRoutine>& cr) {
         cr->set_group_name(classic_conf_.groups(0).name());
       }
     }
-  
+
     if (cr->priority() >= MAX_PRIO) {
       AWARN << cr_name << " prio is greater than MAX_PRIO[ << " << MAX_PRIO << "].";
       cr->set_priority(MAX_PRIO - 1);
     }
-  
+
     const auto& group_name = cr->group_name();
     auto cr_prio = cr->priority();
     // Enqueue task.
@@ -160,7 +160,7 @@ bool SchedulerClassic::DispatchTask(const std::shared_ptr<CRoutine>& cr) {
       ClassicContext::cr_group_[group_name][cr_prio]
           .emplace_back(cr);
     }
-  
+
     PerfEventCache::Instance()->AddSchedEvent(SchedPerf::RT_CREATE, crid,
                                               cr->processor_id());
   }
@@ -212,7 +212,7 @@ bool SchedulerClassic::RemoveCRoutine(uint64_t crid) {
       id_map_mutex_.emplace(crid, wrapper);
     }
   }
-    
+
   std::lock_guard<std::mutex> lg(*wrapper);
 
   std::shared_ptr<CRoutine> cr = nullptr;
