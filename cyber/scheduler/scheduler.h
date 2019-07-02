@@ -65,6 +65,7 @@ class Scheduler {
   bool NotifyTask(uint64_t crid);
 
   void Shutdown();
+  uint32_t TaskPoolSize() const { return task_pool_size_; }
 
   virtual bool RemoveTask(const std::string& name) = 0;
 
@@ -95,6 +96,7 @@ class Scheduler {
 
   std::string process_level_cpuset_;
   uint32_t proc_num_ = 0;
+  uint32_t task_pool_size_ = 0;
   std::atomic<bool> stop_;
 };
 

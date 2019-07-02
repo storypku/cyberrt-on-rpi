@@ -74,6 +74,7 @@ SchedulerClassic::SchedulerClassic() {
         global_conf.scheduler_conf().has_default_proc_num()) {
       proc_num = global_conf.scheduler_conf().default_proc_num();
     }
+    task_pool_size_ = proc_num;
 
     auto sched_group = classic_conf_.add_groups();
     sched_group->set_name(DEFAULT_GROUP_NAME);
@@ -87,6 +88,10 @@ void SchedulerClassic::CreateProcessor() {
   for (auto& group : classic_conf_.groups()) {
     auto& group_name = group.name();
     auto proc_num = group.processor_num();
+    // if (task_pool_size_ == 0) {
+    //   task_pool_size_ = proc_num;
+    // }
+    task_pool_size_ = std::max(task_pool_size_, proc_num); // LIUJIAMING
 
     auto& affinity = group.affinity();
     auto& processor_policy = group.processor_policy();
