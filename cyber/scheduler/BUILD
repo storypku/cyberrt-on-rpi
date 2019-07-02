@@ -125,8 +125,11 @@ cc_test(
         "scheduler_test.cc",
     ],
     deps = [
-        "//cyber",
+        "//cyber/common",
+        "//cyber/croutine",
+        "//cyber/data",
         "//cyber/scheduler:scheduler_factory",
+        "@glog",
         "@gtest//:main",
     ],
 )
@@ -151,8 +154,11 @@ cc_test(
         "scheduler_choreo_test.cc",
     ],
     deps = [
-        "//cyber",
+        "//cyber/common",
+        "//cyber/data",
+        "//cyber/croutine",
         "//cyber/scheduler:scheduler_factory",
+        "@glog",
         "@gtest//:main",
     ],
 )

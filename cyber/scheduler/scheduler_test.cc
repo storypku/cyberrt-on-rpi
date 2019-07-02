@@ -20,22 +20,28 @@
 #include <string>
 
 #include "cyber/common/global_data.h"
-#include "cyber/cyber.h"
-#include "cyber/init.h"
+//#include "cyber/cyber.h"
+//#include "cyber/init.h"
+#include "cyber/state.h"
 #include "cyber/proto/scheduler_conf.pb.h"
 #include "cyber/scheduler/processor_context.h"
 #include "cyber/scheduler/scheduler_factory.h"
+
 
 namespace apollo {
 namespace cyber {
 namespace scheduler {
 
+using apollo::cyber::common::GlobalData;
+
+void Init(const char* program) { SetState(STATE_INITIALIZED); }
 void proc() {}
 
 TEST(SchedulerTest, create_task) {
   GlobalData::Instance()->SetProcessGroup("example_sched_classic");
   auto sched = Instance();
-  cyber::Init("scheduler_test");
+  Init("scheduler_test");
+  // cyber::Init("scheduler_test");
   // read example_sched_classic.conf task 'ABC' prio
   std::string croutine_name = "ABC";
 
@@ -54,7 +60,8 @@ TEST(SchedulerTest, create_task) {
 
 TEST(SchedulerTest, notify_task) {
   auto sched = Instance();
-  cyber::Init("scheduler_test");
+  // cyber::Init("scheduler_test");
+  Init("scheduler_test");
   std::string name = "croutine";
   auto id = GlobalData::RegisterTaskName(name);
   // notify task that the id is not exist

@@ -18,7 +18,8 @@
 #include <algorithm>
 
 #include "cyber/common/global_data.h"
-#include "cyber/cyber.h"
+// #include "cyber/cyber.h"
+#include "cyber/state.h"
 #include "cyber/scheduler/policy/choreography_context.h"
 #include "cyber/scheduler/policy/classic_context.h"
 #include "cyber/scheduler/policy/scheduler_choreography.h"
@@ -28,6 +29,9 @@
 namespace apollo {
 namespace cyber {
 namespace scheduler {
+
+using GlobalData = apollo::cyber::common::GlobalData;
+void Init(const char* program) { SetState(STATE_INITIALIZED); }
 
 void func() {}
 
@@ -46,7 +50,8 @@ TEST(SchedulerChoreoTest, choreo) {
 TEST(SchedulerChoreoTest, sched_choreo) {
   GlobalData::Instance()->SetProcessGroup("example_sched_choreography");
   auto sched = dynamic_cast<SchedulerChoreography*>(scheduler::Instance());
-  cyber::Init("SchedulerChoreoTest");
+  // cyber::Init("SchedulerChoreoTest");
+  Init("SchedulerChoreoTest");
   std::shared_ptr<CRoutine> cr = std::make_shared<CRoutine>(func);
   cr->set_id(GlobalData::RegisterTaskName("sched_choreo"));
   cr->set_name("sched_choreo");

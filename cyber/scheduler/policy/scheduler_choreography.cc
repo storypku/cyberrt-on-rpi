@@ -149,10 +149,10 @@ bool SchedulerChoreography::DispatchTask(const std::shared_ptr<CRoutine>& cr) {
 
   {
     WriteLockGuard<AtomicRWLock> lk(id_cr_lock_);
-    if (id_cr_.find(cr->id()) != id_cr_.end()) {
+    if (id_cr_.find(crid) != id_cr_.end()) {
       return false;
     }
-    id_cr_[cr->id()] = cr;
+    id_cr_[crid] = cr;
   }
 
   // Enqueue task.
