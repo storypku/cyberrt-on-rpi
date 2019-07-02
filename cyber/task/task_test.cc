@@ -21,11 +21,16 @@
 #include <vector>
 
 #include "cyber/common/log.h"
-#include "cyber/cyber.h"
-#include "cyber/init.h"
+// #include "cyber/cyber.h"
+// #include "cyber/init.h"
+#include "cyber/state.h"
+
 
 namespace apollo {
 namespace cyber {
+
+void SimpleInit(const char* program) { SetState(STATE_INITIALIZED); }
+
 namespace scheduler {
 
 class Foo {
@@ -102,7 +107,8 @@ TEST(AsyncTest, run_member_function) {
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
-  apollo::cyber::Init(argv[0]);
+  // apollo::cyber::Init(argv[0]);
+  apollo::cyber::SimpleInit(argv[0]);
   auto res = RUN_ALL_TESTS();
   return res;
 }

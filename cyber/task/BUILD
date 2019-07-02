@@ -15,7 +15,10 @@ cc_test(
     size = "small",
     srcs = ["task_test.cc"],
     deps = [
-        "//cyber:cyber_core",
+        "//cyber/scheduler",
+        "//cyber/croutine",
+        "//cyber/task",
+        "@glog",
         "@gtest//:main",
     ],
 )
