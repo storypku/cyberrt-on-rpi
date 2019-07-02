@@ -122,17 +122,20 @@ void SchedulerChoreography::CreateProcessor() {
 bool SchedulerChoreography::DispatchTask(const std::shared_ptr<CRoutine>& cr) {
   // we use multi-key mutex to prevent race condition
   // when del && add cr with same crid
-  MutexWrapper* wrapper = nullptr;
-  if (!id_map_mutex_.Get(cr->id(), &wrapper)) {
-    {
-      std::lock_guard<std::mutex> wl_lg(cr_wl_mtx_);
-      if (!id_map_mutex_.Get(cr->id(), &wrapper)) {
-        wrapper = new MutexWrapper();
-        id_map_mutex_.Set(cr->id(), wrapper);
-      }
+  MutexWrapper wrapper;
+  auto crid = cr->id();
+  {
+    std::lock_guard<std::mutex> wl_lg(cr_wl_mtx_);
+    auto iter = id_map_mutex_.find(crid);
+    if (iter != id_map_mutex_.end()) {
+      wrapper = iter->second;
+    } else {
+      wrapper = std::make_shared<std::mutex>();
+      id_map_mutex_.emplace(crid, wrapper);
     }
   }
-  std::lock_guard<std::mutex> lg(wrapper->Mutex());
+
+  std::lock_guard<std::mutex> lg(*wrapper);
 
   // Assign sched cfg to tasks according to configuration.
   if (cr_confs_.find(cr->name()) != cr_confs_.end()) {
@@ -179,7 +182,7 @@ bool SchedulerChoreography::DispatchTask(const std::shared_ptr<CRoutine>& cr) {
 }
 
 bool SchedulerChoreography::RemoveTask(const std::string& name) {
-  if (unlikely(stop_)) {
+  if (unlikely(stop_.load())) {
     return true;
   }
 
@@ -190,17 +193,18 @@ bool SchedulerChoreography::RemoveTask(const std::string& name) {
 bool SchedulerChoreography::RemoveCRoutine(uint64_t crid) {
   // we use multi-key mutex to prevent race condition
   // when del && add cr with same crid
-  MutexWrapper* wrapper = nullptr;
-  if (!id_map_mutex_.Get(crid, &wrapper)) {
-    {
-      std::lock_guard<std::mutex> wl_lg(cr_wl_mtx_);
-      if (!id_map_mutex_.Get(crid, &wrapper)) {
-        wrapper = new MutexWrapper();
-        id_map_mutex_.Set(crid, wrapper);
-      }
+  MutexWrapper wrapper;
+  {
+    std::lock_guard<std::mutex> wl_lg(cr_wl_mtx_);
+    auto iter = id_map_mutex_.find(crid);
+    if (iter != id_map_mutex_.end()) {
+      wrapper = iter->second;
+    } else {
+      wrapper = std::make_shared<std::mutex>();
+      id_map_mutex_.emplace(crid, wrapper);
     }
   }
-  std::lock_guard<std::mutex> lg(wrapper->Mutex());
+  std::lock_guard<std::mutex> lg(*wrapper);
 
   // Find cr from id_cr &&
   // get cr prio if cr found
@@ -210,29 +214,29 @@ bool SchedulerChoreography::RemoveCRoutine(uint64_t crid) {
   {
     WriteLockGuard<AtomicRWLock> lk(id_cr_lock_);
     auto p = id_cr_.find(crid);
-    if (p != id_cr_.end()) {
-      auto cr = p->second;
-      prio = cr->priority();
-      pid = cr->processor_id();
-      group_name = cr->group_name();
-      id_cr_[crid]->Stop();
-      id_cr_.erase(crid);
-    } else {
+    if (p == id_cr_.end()) {
       return false;
     }
+
+    auto cr = p->second;
+    prio = cr->priority();
+    pid = cr->processor_id();
+    group_name = cr->group_name();
+    cr->Stop();
+    id_cr_.erase(crid);
   }
 
   // rm cr from pool if rt not in choreo context
   if (pid == -1) {
     WriteLockGuard<AtomicRWLock> lk(
         ClassicContext::rq_locks_[group_name].at(prio));
-    auto& croutines = ClassicContext::cr_group_[group_name].at(prio);
-    for (auto it = croutines.begin(); it != croutines.end(); ++it) {
+    auto& cr_queue = ClassicContext::cr_group_[group_name].at(prio);
+    for (auto it = cr_queue.begin(); it != cr_queue.end(); ++it) {
       if ((*it)->id() == crid) {
         auto cr = *it;
 
         cr->Stop();
-        croutines.erase(it);
+        cr_queue.erase(it);
         cr->Release();
         return true;
       }
@@ -246,7 +250,7 @@ bool SchedulerChoreography::RemoveCRoutine(uint64_t crid) {
 }
 
 bool SchedulerChoreography::NotifyProcessor(uint64_t crid) {
-  if (unlikely(stop_)) {
+  if (unlikely(stop_.load())) {
     return true;
   }
 
@@ -256,13 +260,12 @@ bool SchedulerChoreography::NotifyProcessor(uint64_t crid) {
   {
     ReadLockGuard<AtomicRWLock> lk(id_cr_lock_);
     auto it = id_cr_.find(crid);
-    if (it != id_cr_.end()) {
-      cr = it->second;
-      if (cr->state() == RoutineState::DATA_WAIT) {
-        cr->SetUpdateFlag();
-      }
-    } else {
+    if (it == id_cr_.end()) {
       return false;
+    }
+    cr = it->second;
+    if (cr->state() == RoutineState::DATA_WAIT) {
+      cr->SetUpdateFlag();
     }
   }
 

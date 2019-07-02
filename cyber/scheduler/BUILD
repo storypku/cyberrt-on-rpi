@@ -157,4 +157,18 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "scheduler_simple_test",
+    size = "small",
+    srcs = [
+        "scheduler_simple_test.cc",
+    ],
+    deps = [
+        "//cyber/common",
+        "//cyber/scheduler:scheduler_choreography",
+        "@glog",
+        "@gtest//:main",
+    ],
+)
+
 cpplint()

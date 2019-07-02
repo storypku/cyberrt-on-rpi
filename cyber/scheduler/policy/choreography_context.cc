@@ -86,7 +86,7 @@ void ChoreographyContext::RemoveCRoutine(uint64_t crid) {
   for (auto it = cr_queue_.begin(); it != cr_queue_.end();) {
     auto cr = it->second;
     if (cr->id() == crid) {
-      cr->Stop(); // TODO: should force_stop_ be atomic?
+      cr->Stop();
       it = cr_queue_.erase(it);
       cr->Release();
       return;
