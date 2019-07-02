@@ -14,8 +14,7 @@
  * limitations under the License.
  *****************************************************************************/
 
-#include "cyber/scheduler/scheduler.h"
-#include "cyber/scheduler/policy/scheduler_choreography.h"
+#include "cyber/scheduler/scheduler_factory.h"
 #include <gtest/gtest.h>
 #include <string>
 #include "cyber/common/global_data.h"
@@ -30,6 +29,9 @@ using GlobalData = apollo::cyber::common::GlobalData;
 
 TEST(SchedulerTest, scheduler_start) {
   GlobalData::Instance()->SetProcessGroup("my_sched_choreo");
+  Scheduler* instance = Instance();
+  EXPECT_NE(instance, nullptr);
+  LOG(ERROR) << "Hello";
 }
 
 }  // namespace scheduler

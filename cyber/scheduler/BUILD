@@ -68,7 +68,7 @@ cc_library(
         "policy/scheduler_choreography.h",
     ],
     deps = [
-        "//cyber/scheduler",
+        "//cyber/scheduler:scheduler",
         "//cyber/scheduler:choreography_context",
         "//cyber/scheduler:classic_context",
     ],
@@ -165,7 +165,7 @@ cc_test(
     ],
     deps = [
         "//cyber/common",
-        "//cyber/scheduler:scheduler_choreography",
+        "//cyber/scheduler:scheduler_factory",
         "@glog",
         "@gtest//:main",
     ],
