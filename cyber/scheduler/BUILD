@@ -141,8 +141,11 @@ cc_test(
         "scheduler_classic_test.cc",
     ],
     deps = [
-        "//cyber",
+        "//cyber/task",
+        "//cyber/common",
+        "//cyber/croutine",
         "//cyber/scheduler:scheduler_factory",
+        "@glog",
         "@gtest//:main",
     ],
 )

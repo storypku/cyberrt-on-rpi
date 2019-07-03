@@ -18,7 +18,8 @@
 
 #include "cyber/base/for_each.h"
 #include "cyber/common/global_data.h"
-#include "cyber/cyber.h"
+// #include "cyber/cyber.h"
+#include "cyber/state.h"
 #include "cyber/scheduler/policy/classic_context.h"
 #include "cyber/scheduler/policy/scheduler_classic.h"
 #include "cyber/scheduler/processor.h"
@@ -29,6 +30,7 @@ namespace apollo {
 namespace cyber {
 namespace scheduler {
 
+void Init(const char* program) { SetState(STATE_INITIALIZED); }
 void func() {}
 
 TEST(SchedulerClassicTest, classic) {
@@ -108,8 +110,9 @@ TEST(SchedulerClassicTest, sched_classic) {
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
-  apollo::cyber::Init(argv[0]);
+  // apollo::cyber::Init(argv[0]);
+  apollo::cyber::scheduler::Init(argv[0]);
   auto res = RUN_ALL_TESTS();
-  apollo::cyber::Clear();
+  // apollo::cyber::Clear();
   return res;
 }
