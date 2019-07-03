@@ -27,7 +27,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "cyber/base/atomic_hash_map.h"
+// #include "cyber/base/atomic_hash_map.h"
 #include "cyber/base/atomic_rw_lock.h"
 #include "cyber/common/log.h"
 #include "cyber/common/macros.h"
@@ -41,7 +41,7 @@ namespace apollo {
 namespace cyber {
 namespace scheduler {
 
-using apollo::cyber::base::AtomicHashMap;
+// using apollo::cyber::base::AtomicHashMap;
 using apollo::cyber::base::AtomicRWLock;
 using apollo::cyber::base::ReadLockGuard;
 using apollo::cyber::croutine::CRoutine;
