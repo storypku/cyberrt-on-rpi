@@ -14,8 +14,8 @@ bash cyber_l10n.sh
 
 ## Note
 - It seems that the Apollo Team has added `aarch64` support for CyberRT in the master branch.
-- Scheduler::ParseCpuset expects well-formatted cpuset. It will either throw or exit otherwise.
-
+- Scheduler::ParseCpuset expects well-formatted cpuset. Otherwise, it will either throw or exit.
+- //cyber/logger and //cyber/common:log are unrelated logging facilities.
 
 ## Known problems
 - AtomicHashMap isn't thread-safe.
