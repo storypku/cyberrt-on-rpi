@@ -21,16 +21,19 @@
 #include <condition_variable>
 #include <cstdint>
 #include <ctime>
-#include <iostream>
+// #include <iostream>
 #include <memory>
-#include <mutex>
 #include <string>
+#include <vector>
+#include <unordered_map>
 #include <thread>
 #include <utility>
-#include <vector>
+#include <mutex>
 
+#include <glog/logging.h>
+
+#include "cyber/logger/log_file_object.h"
 #include "cyber/common/macros.h"
-#include "glog/logging.h"
 
 namespace apollo {
 namespace cyber {
@@ -122,6 +125,7 @@ class AsyncLogger : public google::base::Logger {
   const std::thread* LogThread() const { return &thread_; }
 
  private:
+  static std::unordered_map<std::string, LogFileObjectPtr> moduleLoggerMap;
   // A buffered message.
   //
   // TODO(todd): using std::string for buffered messages is convenient but not

@@ -19,23 +19,21 @@
 #include <stdlib.h>
 #include <string>
 #include <thread>
-#include <unordered_map>
 
 #include "cyber/base/macros.h"
-#include "cyber/logger/log_file_object.h"
 #include "cyber/logger/logger_util.h"
 
 namespace apollo {
 namespace cyber {
 namespace logger {
 
-static std::unordered_map<std::string, LogFileObject*> moduleLoggerMap;
+std::unordered_map<std::string, LogFileObjectPtr> AsyncLogger::moduleLoggerMap;
 
 AsyncLogger::AsyncLogger(google::base::Logger* wrapped, int max_buffer_bytes)
     : max_buffer_bytes_(max_buffer_bytes),
       wrapped_(wrapped),
-      active_buf_(new Buffer()),
-      flushing_buf_(new Buffer()) {
+      active_buf_(std::make_unique<Buffer>()),
+      flushing_buf_(std::make_unique<Buffer>()) {
   if (max_buffer_bytes_ <= 0) {
     max_buffer_bytes_ = 2 * 1024 * 1024;
   }
@@ -43,10 +41,6 @@ AsyncLogger::AsyncLogger(google::base::Logger* wrapped, int max_buffer_bytes)
 
 AsyncLogger::~AsyncLogger() {
   Stop();
-  for (auto itr = moduleLoggerMap.begin(); itr != moduleLoggerMap.end();
-       ++itr) {
-    delete itr->second;
-  }
 }
 
 void AsyncLogger::Start() {
@@ -61,8 +55,8 @@ void AsyncLogger::Stop() {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_EQ(state_, RUNNING);
     state_ = STOPPED;
-    wake_flusher_cv_.notify_one();
   }
+  wake_flusher_cv_.notify_one();
   thread_.join();
   CHECK(active_buf_->messages.empty());
   CHECK(flushing_buf_->messages.empty());
@@ -71,12 +65,13 @@ void AsyncLogger::Stop() {
 
 void AsyncLogger::Write(bool force_flush, time_t timestamp, const char* message,
                         int message_len) {
-  // drop message when active buffer full
-  if (unlikely(BufferFull(*active_buf_))) {
-    return;
-  }
   {
     std::unique_lock<std::mutex> lock(mutex_);
+    // drop message when active buffer full
+    if (unlikely(BufferFull(*active_buf_))) {
+      return;
+    }
+
     if (state_ != RUNNING) {
       // std::cout << "Async Logger not running!" << std::endl;
       return;
@@ -108,8 +103,8 @@ void AsyncLogger::Write(bool force_flush, time_t timestamp, const char* message,
                          force_flush);
       }
     }
-    wake_flusher_cv_.notify_one();
   }
+  wake_flusher_cv_.notify_one();
 }
 
 void AsyncLogger::Flush() {
@@ -148,19 +143,20 @@ void AsyncLogger::RunThread() {
       std::string module_name;
       FindModuleName(&msg.message, &module_name);
 
-      LogFileObject* fileobject = nullptr;
-      if (moduleLoggerMap.find(module_name) != moduleLoggerMap.end()) {
-        fileobject = moduleLoggerMap[module_name];
-      } else {
-        fileobject = new LogFileObject(google::INFO, module_name.c_str());
-        fileobject->SetSymlinkBasename(module_name.c_str());
-        moduleLoggerMap[module_name] = fileobject;
+      LogFileObjectPtr fileobject;
+      {
+        auto iter = moduleLoggerMap.find(module_name);
+        if (iter != moduleLoggerMap.end()) {
+            fileobject = iter->second;
+        } else {
+            fileobject = std::make_shared<LogFileObject>(google::INFO, module_name.c_str());
+            fileobject->SetSymlinkBasename(module_name.c_str());
+            moduleLoggerMap.emplace(module_name, fileobject);
+        }
       }
-      if (fileobject) {
-        const bool should_flush = msg.level > 0;
-        fileobject->Write(should_flush, msg.ts, msg.message.data(),
-                          static_cast<int>(msg.message.size()));
-      }
+      const bool should_flush = msg.level > 0;
+      fileobject->Write(should_flush, msg.ts, msg.message.data(),
+                        static_cast<int>(msg.message.size()));
     }
 
     if (flushing_buf_->flush) {
@@ -172,7 +168,9 @@ void AsyncLogger::RunThread() {
 
     lock.lock();
     flush_count_++;
+    // lock.unlock(); ???
     flush_complete_cv_.notify_all();
+    // lock.lock(); ???
   }
 }
 

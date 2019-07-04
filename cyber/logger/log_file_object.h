@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <mutex>
+#include <memory>
 #include <string>
 
 #include <glog/logging.h>
@@ -65,6 +66,8 @@ class LogFileObject : public google::base::Logger {
   unsigned int rollover_attempt_;
   int64_t next_flush_time_;  // cycle count of which to flush log
 };
+
+using LogFileObjectPtr = std::shared_ptr<LogFileObject>;
 
 }  // namespace logger
 }  // namespace cyber
