@@ -16,13 +16,18 @@
 
 #ifndef CYBER_LOGGER_LOGGER_H_
 #define CYBER_LOGGER_LOGGER_H_
+#include <unordered_map>
+#include <memory>
+#include <mutex>
 
 #include <glog/logging.h>
-#include <mutex>
 
 namespace apollo {
 namespace cyber {
 namespace logger {
+
+class LogFileObject;
+using LogFileObjectPtr = std::shared_ptr<LogFileObject>;
 
 class Logger : public google::base::Logger {
  public:
@@ -36,6 +41,7 @@ class Logger : public google::base::Logger {
  private:
   google::base::Logger* const wrapped_;
   std::mutex mutex_;
+  static std::unordered_map<std::string, LogFileObjectPtr> moduleLoggerMap;
 };
 
 }  // namespace logger

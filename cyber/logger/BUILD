@@ -24,7 +24,9 @@ cc_test(
         "logger_test.cc",
     ],
     deps = [
-        "//cyber",
+        "//cyber/time:time",
+        ":logger",
+        "@glog",
         "@gtest//:main",
     ],
 )
@@ -53,7 +55,6 @@ cc_library(
         "log_file_object.h",
     ],
     deps = [
-        "//cyber:binary",
         "//cyber/common:log",
         "//cyber/logger:logger_util",
     ],
@@ -66,7 +67,9 @@ cc_test(
         "log_file_object_test.cc",
     ],
     deps = [
-        "//cyber",
+        "//cyber/time",
+        ":log_file_object",
+        "@glog",
         "@gtest//:main",
     ],
 )

@@ -30,15 +30,12 @@ namespace apollo {
 namespace cyber {
 namespace logger {
 
-static std::unordered_map<std::string, LogFileObject*> moduleLoggerMap;
+
+std::unordered_map<std::string, LogFileObjectPtr> Logger::moduleLoggerMap;
 
 Logger::Logger(google::base::Logger* wrapped) : wrapped_(wrapped) {}
 
 Logger::~Logger() {
-  for (auto itr = moduleLoggerMap.begin(); itr != moduleLoggerMap.end();
-       ++itr) {
-    delete itr->second;
-  }
 }
 
 void Logger::Write(bool force_flush, time_t timestamp, const char* message,
@@ -48,21 +45,20 @@ void Logger::Write(bool force_flush, time_t timestamp, const char* message,
   // set the same bracket as the bracket in log.h
   FindModuleName(&log_message, &module_name);
 
-  LogFileObject* fileobject = nullptr;
+  LogFileObjectPtr file_object;
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (moduleLoggerMap.find(module_name) != moduleLoggerMap.end()) {
-      fileobject = moduleLoggerMap[module_name];
+    auto iter = moduleLoggerMap.find(module_name);
+    if (iter != moduleLoggerMap.end()) {
+      file_object = iter->second;
     } else {
-      fileobject = new LogFileObject(google::INFO, module_name.c_str());
-      fileobject->SetSymlinkBasename(module_name.c_str());
-      moduleLoggerMap[module_name] = fileobject;
+      file_object = std::make_shared<LogFileObject>(google::INFO, module_name.c_str());
+      file_object->SetSymlinkBasename(module_name.c_str());
+      moduleLoggerMap.emplace(module_name, file_object);
     }
   }
-  if (fileobject) {
-    fileobject->Write(force_flush, timestamp, log_message.c_str(),
-                      static_cast<int>(log_message.size()));
-  }
+  file_object->Write(force_flush, timestamp, log_message.c_str(),
+    static_cast<int>(log_message.size()));
 }
 
 void Logger::Flush() { wrapped_->Flush(); }

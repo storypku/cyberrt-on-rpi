@@ -29,7 +29,7 @@ namespace logger {
 
 class LogFileObject : public google::base::Logger {
  public:
-  LogFileObject(google::LogSeverity severity, const char* base_filename);
+  LogFileObject(google::LogSeverity severity, const std::string& base_filename);
   ~LogFileObject();
 
   void Write(bool force_flush, time_t timestamp, const char* message,
@@ -53,7 +53,6 @@ class LogFileObject : public google::base::Logger {
   bool CreateLogfile(const std::string& time_pid_string);
   static const uint32_t kRolloverAttemptFrequency = 0x20;
   std::mutex lock_;
-  bool base_filename_selected_;
   std::string base_filename_;
   std::string base_filepath_;
   std::string symlink_basename_;

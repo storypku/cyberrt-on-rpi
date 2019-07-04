@@ -31,8 +31,9 @@
 #include <string>
 #include <vector>
 
-#include "cyber/common/global_data.h"
 #include <glog/logging.h>
+
+#include "cyber/common/global_data.h"
 
 namespace apollo {
 namespace cyber {

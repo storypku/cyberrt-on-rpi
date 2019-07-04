@@ -50,6 +50,7 @@
 
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <libgen.h>
 #include <sys/types.h>
 #include <cassert>
 #include <iomanip>
@@ -59,23 +60,25 @@
 #include "cyber/common/log.h"
 #include "cyber/logger/logger_util.h"
 
+#define PATH_SEPARATOR '/'
+
+namespace {
+bool stop_writing = false;
+const int NUM_SEVERITIES = 4;
+const char* const UC_LOG_SEVERITY_NAMES[NUM_SEVERITIES] = {
+    "INFO", "WARNING", "ERROR", "FATAL"};
+const char* const LC_LOG_SEVERITY_NAMES[NUM_SEVERITIES] = {
+    "info", "warning", "error", "fatal"};
+}
+
 namespace apollo {
 namespace cyber {
 namespace logger {
 
-#define PATH_SEPARATOR '/'
-static bool stop_writing = false;
-static const int NUM_SEVERITIES = 4;
-static const char* const UC_LOG_SEVERITY_NAMES[NUM_SEVERITIES] = {
-    "INFO", "WARNING", "ERROR", "FATAL"};
-static const char* const LC_LOG_SEVERITY_NAMES[NUM_SEVERITIES] = {
-    "info", "warning", "error", "fatal"};
-
 LogFileObject::LogFileObject(google::LogSeverity severity,
-                             const char* base_filename)
-    : base_filename_selected_(base_filename != nullptr),
-      base_filename_((base_filename != nullptr) ? base_filename : ""),
-      base_filepath_(base_filename_),
+                             const std::string& base_filename)
+    : base_filename_(base_filename),
+      base_filepath_(),
       symlink_basename_("UNKNOWN"),
       filename_extension_(),
       file_(NULL),
@@ -96,7 +99,6 @@ LogFileObject::~LogFileObject() {
 
 void LogFileObject::SetBasename(const char* basename) {
   std::lock_guard<std::mutex> lock(lock_);
-  base_filename_selected_ = true;
   if (base_filename_ != basename) {
     // Get rid of old log file since we are changing names
     if (file_ != nullptr) {
@@ -137,7 +139,7 @@ void LogFileObject::FlushUnlocked() {
     bytes_since_flush_ = 0;
   }
   // Figure out when we are due for another flush.
-  const int64_t next = static_cast<int64_t>(2000000);  // in usec
+  const int64_t next = 2000000L;  // in usec
   next_flush_time_ = apollo::cyber::logger::CycleClock_Now() + next;
 }
 
@@ -165,22 +167,20 @@ bool LogFileObject::CreateLogfile(const std::string& time_pid_string) {
   }
 
   if (!symlink_basename_.empty()) {
-    // take directory from filename
-    const char* slash = strrchr(filename, PATH_SEPARATOR);
-    const std::string linkname =
-        symlink_basename_ + '.' + UC_LOG_SEVERITY_NAMES[severity_];
-    std::string linkpath;
-    if (slash) {
-      linkpath = std::string(filename, slash - filename + 1);  // get dirname
+    std::string base_name(basename(const_cast<char*>(filename)));
+    std::string dir_name(dirname(const_cast<char*>(filename)));
+
+    std::string link_path = symlink_basename_ + '.' + UC_LOG_SEVERITY_NAMES[severity_];
+    if (dir_name != ".") {
+      link_path = dir_name + "/" + link_path;
     }
-    linkpath += linkname;
-    unlink(linkpath.c_str());  // delete old one if it exists
+    unlink(link_path.c_str());  // delete old one if it exists
 
     // Make the symlink be relative (in the same dir) so that if the
     // entire log directory gets relocated the link is still valid.
-    const char* linkdest = slash ? (slash + 1) : filename;
+    const char* linkdest = base_name.c_str();
     // silently ignore failures
-    if (symlink(linkdest, linkpath.c_str())) {
+    if (symlink(linkdest, link_path.c_str())) {
       AERROR << "symlink failed.";
     }
   }
@@ -192,13 +192,15 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
   std::lock_guard<std::mutex> lock(lock_);
 
   // We don't log if the base_name_ is "" (which means "don't write")
-  if (base_filename_selected_ && base_filename_.empty()) {
+  if (base_filename_.empty()) {
     return;
   }
 
   if (static_cast<int>(file_length_ >> 20) >= MaxLogSize() || PidHasChanged()) {
-    if (file_ != nullptr) fclose(file_);
-    file_ = nullptr;
+    if (file_ != nullptr) {
+      fclose(file_);
+      file_ = nullptr;
+    }
     file_length_ = bytes_since_flush_ = dropped_mem_length_ = 0;
     rollover_attempt_ = kRolloverAttemptFrequency - 1;
   }
@@ -228,16 +230,14 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
 
     std::string host_name;
     apollo::cyber::logger::GetHostName(&host_name);
-    if (base_filename_selected_) {
+    {
       bool success = false;
-
       std::string stripped_filename =
           base_filename_ + ".log." + LC_LOG_SEVERITY_NAMES[severity_] + ".";
 
       const std::vector<std::string>& log_dirs = GetLoggingDirectories();
 
-      for (std::vector<std::string>::const_iterator dir = log_dirs.begin();
-           dir != log_dirs.end(); ++dir) {
+      for (auto dir = log_dirs.cbegin(); dir != log_dirs.cend(); ++dir) {
         base_filepath_ = *dir + PATH_SEPARATOR + stripped_filename;
         if (CreateLogfile(time_pid_string)) {
           success = true;
@@ -269,9 +269,6 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
 
     const uint32_t header_len =
         static_cast<uint32_t>(file_header_string.size());
-    if (file_ == nullptr) {
-      return;
-    }
     fwrite(file_header_string.data(), 1, header_len, file_);
     file_length_ += header_len;
     bytes_since_flush_ += header_len;
