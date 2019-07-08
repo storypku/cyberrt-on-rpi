@@ -23,14 +23,17 @@
 #include <utility>
 
 #include "cyber/common/util.h"
-#include "cyber/cyber.h"
-#include "cyber/init.h"
+// #include "cyber/cyber.h"
+// #include "cyber/init.h"
+#include "cyber/state.h"
 
 #include "cyber/timer/timer.h"
 
 namespace apollo {
 namespace cyber {
 namespace timer {
+
+void SimpleInit(const char* program) { SetState(STATE_INITIALIZED); }
 
 using cyber::Timer;
 using cyber::TimerOption;
@@ -100,6 +103,7 @@ TEST(TimerTest, test1) {
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
-  apollo::cyber::Init(argv[0]);
+  // apollo::cyber::Init(argv[0]);
+  apollo::cyber::timer::SimpleInit(argv[0]);
   return RUN_ALL_TESTS();
 }

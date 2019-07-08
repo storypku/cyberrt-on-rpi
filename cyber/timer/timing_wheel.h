@@ -36,15 +36,13 @@ struct TimerTask;
 static const uint64_t WORK_WHEEL_SIZE = 512;
 static const uint64_t ASSISTANT_WHEEL_SIZE = 64;
 static const uint64_t TIMER_RESOLUTION_MS = 1;
-static const uint64_t TIMER_MAX_INTERVAL_MS =
-    WORK_WHEEL_SIZE * ASSISTANT_WHEEL_SIZE;
+static const uint64_t TIMER_MAX_INTERVAL_MS = WORK_WHEEL_SIZE * ASSISTANT_WHEEL_SIZE;
 
+// Hierarchical Timing Wheels
 class TimingWheel {
  public:
   ~TimingWheel() {
-    if (running_) {
-      Shutdown();
-    }
+    Shutdown();
   }
 
   void Start();
@@ -55,12 +53,13 @@ class TimingWheel {
 
   void AddTask(const std::shared_ptr<TimerTask>& task);
 
+  void TickFunc();
+
+ private:
   void AddTask(const std::shared_ptr<TimerTask>& task,
                const uint64_t current_work_wheel_index);
 
   void Cascade(const uint64_t assistant_wheel_index);
-
-  void TickFunc();
 
  private:
   uint64_t GetWorkWheelIndex(const uint64_t index) {

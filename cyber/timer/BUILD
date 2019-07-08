@@ -44,8 +44,8 @@ cc_test(
     timeout = "moderate",
     srcs = ["timer_test.cc"],
     deps = [
-        "//cyber:cyber_core",
-        "//cyber:init",
+        "//cyber/timer:timer",
+        "@glog",
         "@gtest//:main",
     ],
 )
