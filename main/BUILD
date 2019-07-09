@@ -36,3 +36,12 @@ proto_library(
     ],
 )
 
+cc_binary(
+    name = "poller_demo",
+    srcs = ["poller_demo.cc"],
+    deps = [
+        "//cyber/io:poller",
+        "@glog",
+        "@gtest",
+    ],
+)

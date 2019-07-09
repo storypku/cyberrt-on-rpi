@@ -15,45 +15,59 @@
  *****************************************************************************/
 
 #include "cyber/io/poller.h"
-
-#include <fcntl.h>
 #include <gtest/gtest.h>
+#include "cyber/common/log.h"
+#include <fcntl.h>
 #include <unistd.h>
 #include <thread>
 
 // #include "cyber/init.h"
 
-namespace apollo {
-namespace cyber {
-namespace io {
+using apollo::cyber::io::Poller;
+using apollo::cyber::io::PollRequest;
+using apollo::cyber::io::PollResponse;
 
-TEST(PollerTest, operation) {
+int main(int argc, char** argv) {
+  google::InitGoogleLogging(argv[0]);
   auto poller = Poller::Instance();
-  ASSERT_NE(poller, nullptr);
+  EXPECT_TRUE(poller != nullptr);
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-  // invalid input
-  PollRequest request;
-  EXPECT_FALSE(poller->Register(request));
 
   int pipe_fd[2] = {-1, -1};
-  ASSERT_EQ(pipe(pipe_fd), 0);
-  ASSERT_EQ(fcntl(pipe_fd[0], F_SETFL, O_NONBLOCK), 0);
-  ASSERT_EQ(fcntl(pipe_fd[1], F_SETFL, O_NONBLOCK), 0);
+  EXPECT_TRUE(0 == pipe2(pipe_fd, O_NONBLOCK));
+  AINFO << "Test pipe fd=" << pipe_fd[0];
 
-  // invalid input, callback is nullptr
+  int ref_pipe[2] = {-1, -1};
+  EXPECT_TRUE(0 == pipe2(ref_pipe, O_NONBLOCK));
+  AINFO << "Reference pipe fd=" << ref_pipe[0];
+
+  PollRequest ref_req;
+  ref_req.fd = ref_pipe[0];
+  ref_req.events = EPOLLIN | EPOLLET;
+  ref_req.timeout_ms = 0;
+  ref_req.callback = [](const PollResponse&) {};
+
+  PollRequest request;
   request.fd = pipe_fd[0];
   request.events = EPOLLIN | EPOLLET;
   request.timeout_ms = 0;
-  EXPECT_FALSE(poller->Register(request));
 
-  // timeout_ms is 0
   PollResponse response(123);
   request.callback = [&response](const PollResponse& rsp) { response = rsp; };
+
   EXPECT_TRUE(poller->Register(request));
+  EXPECT_TRUE(poller->Register(ref_req));
   std::this_thread::sleep_for(std::chrono::milliseconds(5));
   EXPECT_EQ(response.events, 0);
 
+  response.events = 123;
+  request.timeout_ms = 1;
+  EXPECT_TRUE(poller->Register(ref_req));
+  EXPECT_TRUE(poller->Register(request));
+  std::this_thread::sleep_for(std::chrono::milliseconds(3));
+  EXPECT_EQ(response.events, 0);
+  AINFO << "==================";
   // timeout_ms is 50
   response.events = 123;
   request.timeout_ms = 50;
@@ -78,33 +92,10 @@ TEST(PollerTest, operation) {
   } while (res <= 0 && try_num >= 0);
   std::this_thread::sleep_for(std::chrono::milliseconds(5));
   EXPECT_NE(response.events & EPOLLIN, 0);
-
-  EXPECT_TRUE(poller->Unregister(request));
-  EXPECT_FALSE(poller->Unregister(request));
-  request.callback = nullptr;
-  EXPECT_FALSE(poller->Unregister(request));
-  request.fd = -1;
-  EXPECT_FALSE(poller->Unregister(request));
-
+  // EXPECT_TRUE(poller->Unregister(request));
   poller->Shutdown();
-  request.fd = pipe_fd[0];
-  request.events = EPOLLIN | EPOLLET;
-  request.timeout_ms = 0;
-  request.callback = [](const PollResponse&) {};
-  // poller has been shutdown
-  EXPECT_FALSE(poller->Register(request));
-  EXPECT_FALSE(poller->Unregister(request));
 
   close(pipe_fd[0]);
   close(pipe_fd[1]);
-}
 
-}  // namespace io
-}  // namespace cyber
-}  // namespace apollo
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  // apollo::cyber::Init(argv[0]);
-  return RUN_ALL_TESTS();
 }

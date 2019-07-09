@@ -67,13 +67,14 @@ bool Poller::Register(const PollRequest& req) {
 
   {
     WriteLockGuard<AtomicRWLock> lck(poll_data_lock_);
-    if (requests_.count(req.fd) == 0) {
+    auto iter = requests_.find(req.fd);
+    if (iter == requests_.end()) {
       ctrl_param.operation = EPOLL_CTL_ADD;
-      requests_[req.fd] = std::make_shared<PollRequest>();
+      requests_.emplace(req.fd, std::make_shared<PollRequest>(req));
     } else {
       ctrl_param.operation = EPOLL_CTL_MOD;
+      *(iter->second) = req;
     }
-    *requests_[req.fd] = req;
     ctrl_params_[ctrl_param.fd] = ctrl_param;
   }
 
@@ -93,8 +94,8 @@ bool Poller::Unregister(const PollRequest& req) {
 
   {
     WriteLockGuard<AtomicRWLock> lck(poll_data_lock_);
-    auto size = requests_.erase(req.fd);
-    if (size == 0) {
+    auto count = requests_.erase(req.fd);
+    if (count == 0) {
       AERROR << "unregister failed, can't find fd: " << req.fd;
       return false;
     }
@@ -117,16 +118,8 @@ bool Poller::Init() {
   }
 
   // create pipe, and set nonblock
-  if (pipe(pipe_fd_) == -1) {
+  if (pipe2(pipe_fd_, O_NONBLOCK) == -1) {
     AERROR << "create pipe failed, " << strerror(errno);
-    return false;
-  }
-  if (fcntl(pipe_fd_[0], F_SETFL, O_NONBLOCK) == -1) {
-    AERROR << "set nonblock failed, " << strerror(errno);
-    return false;
-  }
-  if (fcntl(pipe_fd_[1], F_SETFL, O_NONBLOCK) == -1) {
-    AERROR << "set nonblock failed, " << strerror(errno);
     return false;
   }
 
@@ -183,14 +176,15 @@ void Poller::Clear() {
 }
 
 void Poller::Poll(int timeout_ms) {
-  epoll_event evt[kPollSize];
+  struct epoll_event evt[kPollSize];
   auto before_time_ns = Time::Now().ToNanosecond();
   int ready_num = epoll_wait(epoll_fd_, evt, kPollSize, timeout_ms);
   auto after_time_ns = Time::Now().ToNanosecond();
   int interval_ms =
       static_cast<int>((after_time_ns - before_time_ns) / 1000000);
+
   if (interval_ms == 0) {
-    interval_ms = 1;
+    interval_ms = 1; // compensate?
   }
 
   std::unordered_map<int, PollResponse> responses;
@@ -198,12 +192,12 @@ void Poller::Poll(int timeout_ms) {
     ReadLockGuard<AtomicRWLock> lck(poll_data_lock_);
     for (auto& item : requests_) {
       auto& request = item.second;
-      if (ctrl_params_.count(request->fd) != 0) {
+      if (ctrl_params_.count(request->fd) != 0) { // newcomer
         continue;
       }
 
       if (request->timeout_ms > 0) {
-        request->timeout_ms -= interval_ms;
+        request->timeout_ms -= interval_ms; // 1 - (0->1) ?
         if (request->timeout_ms < 0) {
           request->timeout_ms = 0;
         }
@@ -211,7 +205,7 @@ void Poller::Poll(int timeout_ms) {
 
       if (request->timeout_ms == 0) {
         responses[item.first] = PollResponse();
-        request->timeout_ms = -1;
+        request->timeout_ms = -1; // reset to -1, waiting forever
       }
     }
   }

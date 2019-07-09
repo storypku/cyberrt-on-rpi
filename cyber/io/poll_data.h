@@ -41,7 +41,7 @@ struct PollRequest {
 struct PollCtrlParam {
   int operation;
   int fd;
-  epoll_event event;
+  struct epoll_event event;
 };
 
 }  // namespace io
