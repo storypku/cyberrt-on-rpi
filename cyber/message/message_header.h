@@ -79,9 +79,10 @@ class MessageHeader {
     if (msg_type_len >= sizeof(msg_type_)) {
       real_len = sizeof(msg_type_) - 1;
     }
-    reset_msg_type();
     memcpy(msg_type_, msg_type, real_len);
+    msg_type_[real_len] = '\0';
   }
+
   void reset_msg_type() { memset(msg_type_, 0, sizeof(msg_type_)); }
 
   void reset_res() { memset(res_, 0, sizeof(res_)); }

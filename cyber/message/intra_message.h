@@ -17,7 +17,6 @@
 #ifndef CYBER_MESSAGE_INTRA_MESSAGE_H_
 #define CYBER_MESSAGE_INTRA_MESSAGE_H_
 
-#include <cassert>
 #include <memory>
 #include <string>
 

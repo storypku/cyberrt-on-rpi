@@ -91,7 +91,7 @@ bool ProtobufFactory::GetProtoDesc(const FileDescriptor* file_desc,
                                    ProtoDesc* proto_desc) {
   FileDescriptorProto file_desc_proto;
   file_desc->CopyTo(&file_desc_proto);
-  std::string str("");
+  std::string str;
   if (!file_desc_proto.SerializeToString(&str)) {
     return false;
   }

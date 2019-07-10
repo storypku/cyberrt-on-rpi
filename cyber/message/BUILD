@@ -26,7 +26,7 @@ cc_test(
         "message_header_test.cc",
     ],
     deps = [
-        "//cyber",
+        ":message_header",
         "@gtest//:main",
     ],
 )
@@ -122,7 +122,8 @@ cc_test(
         "raw_message_test.cc",
     ],
     deps = [
-        "//cyber",
+        ":raw_message",
+        "@glog",
         "@gtest//:main",
     ],
 )
@@ -134,8 +135,9 @@ cc_test(
         "protobuf_factory_test.cc",
     ],
     deps = [
-        "//cyber",
+        ":protobuf_factory",
         "//cyber/proto:unit_test_cc_proto",
+        "@glog",
         "@gtest//:main",
     ],
 )
