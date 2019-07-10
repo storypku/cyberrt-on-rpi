@@ -23,8 +23,8 @@ namespace io {
 
 Session::Session() : Session(-1) {}
 
-Session::Session(int fd) : fd_(fd), poll_handler_(nullptr) {
-  poll_handler_.reset(new PollHandler(fd_));
+Session::Session(int fd)
+    : fd_(fd), poll_handler_(std::make_unique<PollHandler>(fd_)) {
 }
 
 int Session::Socket(int domain, int type, int protocol) {
@@ -69,11 +69,11 @@ auto Session::Accept(struct sockaddr *addr, socklen_t *addrlen) -> SessionPtr {
 int Session::Connect(const struct sockaddr *addr, socklen_t addrlen) {
   ACHECK(fd_ != -1);
 
-  int optval;
-  socklen_t optlen = sizeof(optval);
   int res = connect(fd_, addr, addrlen);
-  if (res == -1 && errno == EINPROGRESS) {
+  if (res == -1 && errno == EINPROGRESS) { // connect(2)
     poll_handler_->Block(-1, false);
+    int optval;
+    socklen_t optlen = sizeof(optval);
     getsockopt(fd_, SOL_SOCKET, SO_ERROR, reinterpret_cast<void *>(&optval),
                &optlen);
     if (optval == 0) {

@@ -68,7 +68,11 @@ cc_binary(
     name = "tcp_echo_client",
     srcs = ["example/tcp_echo_client.cc"],
     deps = [
-        "//cyber:cyber_core",
+        "//cyber/io",
+        "//cyber/task",
+        "//cyber/common",
+        "//cyber/scheduler",
+        "@glog",
     ],
 )
 
@@ -76,7 +80,11 @@ cc_binary(
     name = "tcp_echo_server",
     srcs = ["example/tcp_echo_server.cc"],
     deps = [
-        "//cyber:cyber_core",
+        "//cyber/io",
+        "//cyber/task",
+        "//cyber/common",
+        "//cyber/scheduler",
+        "@glog",
     ],
 )
 
