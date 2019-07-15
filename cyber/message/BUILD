@@ -53,8 +53,9 @@ cc_test(
         "message_traits_test.cc",
     ],
     deps = [
-        "//cyber",
+        ":message_traits",
         "//cyber/proto:unit_test_cc_proto",
+        "@glog",
         "@gtest//:main",
     ],
 )

@@ -35,6 +35,14 @@ http_archive(
     sha256 = "03d2e5ef101aee4c2f6ddcf145d2a04926b9c19e7086944df3842b1b8502b783",
 )
 
+# cpplint from google style guide
+new_local_repository(
+    name = "google_styleguide",
+    build_file = "external/google_styleguide.BUILD",
+    path = "/opt/bazel.repo/google_styleguide",
+)
+
+
 # bazel-skylib 0.8.0 released 2019.03.20 (https://github.com/bazelbuild/bazel-skylib/releases/tag/0.8.0)
 skylib_version = "0.8.0"
 http_archive(
