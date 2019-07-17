@@ -264,7 +264,8 @@ bool SchedulerChoreography::NotifyProcessor(uint64_t crid) {
       return false;
     }
     cr = it->second;
-    if (cr->state() == RoutineState::DATA_WAIT) {
+    if (cr->state() == RoutineState::DATA_WAIT ||
+        cr->state() == RoutineState::IO_WAIT) {
       cr->SetUpdateFlag();
     }
   }
