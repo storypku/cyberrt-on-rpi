@@ -22,8 +22,9 @@
 #include <string>
 #include <vector>
 
-#include "cyber/cyber.h"
-#include "cyber/init.h"
+// #include "cyber/cyber.h"
+// #include "cyber/init.h"
+#include "cyber/state.h"
 #include "cyber/io/session.h"
 #include "cyber/scheduler/scheduler_factory.h"
 #include "cyber/task/task.h"
@@ -51,13 +52,20 @@ void Echo(const std::shared_ptr<Session>& session) {
   }
 }
 
+namespace apollo {
+namespace cyber {
+void SimpleInit(const char* program) { SetState(STATE_INITIALIZED); }
+} // namespace cyber
+} // namespace apollo
+
 int main(int argc, char* argv[]) {
   if (argc != 2) {
     std::cout << "Usage: " << argv[0] << " <server port>" << std::endl;
     return -1;
   }
 
-  apollo::cyber::Init(argv[0]);
+  // apollo::cyber::Init(argv[0]);
+  apollo::cyber::SimpleInit(argv[0]);
 
   uint16_t server_port = static_cast<uint16_t>(atoi(argv[1]));
   apollo::cyber::scheduler::Instance()->CreateTask(

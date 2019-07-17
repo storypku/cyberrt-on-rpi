@@ -92,7 +92,12 @@ cc_binary(
     name = "udp_echo_client",
     srcs = ["example/udp_echo_client.cc"],
     deps = [
-        "//cyber:cyber_core",
+        #"//cyber:cyber_core",
+        "//cyber/io",
+        "//cyber/task",
+        "//cyber/common",
+        "//cyber/scheduler",
+        "@glog",
     ],
 )
 
@@ -100,7 +105,12 @@ cc_binary(
     name = "udp_echo_server",
     srcs = ["example/udp_echo_server.cc"],
     deps = [
-        "//cyber:cyber_core",
+        #"//cyber:cyber_core",
+        "//cyber/io",
+        "//cyber/task",
+        "//cyber/common",
+        "//cyber/scheduler",
+        "@glog",
     ],
 )
 
