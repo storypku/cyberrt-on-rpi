@@ -20,10 +20,6 @@ namespace apollo {
 namespace cyber {
 namespace transport {
 
-QosProfileConf::QosProfileConf() {}
-
-QosProfileConf::~QosProfileConf() {}
-
 QosProfile QosProfileConf::CreateQosProfile(
     const QosHistoryPolicy& history, uint32_t depth, uint32_t mps,
     const QosReliabilityPolicy& reliability,

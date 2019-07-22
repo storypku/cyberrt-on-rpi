@@ -219,8 +219,12 @@ cc_test(
     srcs = [
         "message/message_test.cc",
     ],
+    linkopts = ["-luuid"],
     deps = [
-        "//cyber:cyber_core",
+        ":listener_handler",
+        ":message_info",
+        ":qos_profile_conf",
+        "@glog",
         "@gtest//:main",
     ],
 )

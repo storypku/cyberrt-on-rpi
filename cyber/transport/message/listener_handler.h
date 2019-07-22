@@ -98,9 +98,9 @@ template <typename MessageT>
 void ListenerHandler<MessageT>::Connect(uint64_t self_id,
                                         const Listener& listener) {
   auto connection = signal_.Connect(listener);
-  if (!connection.IsConnected()) {
-    return;
-  }
+  // if (!connection.IsConnected()) {
+  //  return;
+  // }
 
   WriteLockGuard<AtomicRWLock> lock(rw_lock_);
   signal_conns_[self_id] = connection;
@@ -141,16 +141,17 @@ void ListenerHandler<MessageT>::Disconnect(uint64_t self_id) {
 template <typename MessageT>
 void ListenerHandler<MessageT>::Disconnect(uint64_t self_id, uint64_t oppo_id) {
   WriteLockGuard<AtomicRWLock> lock(rw_lock_);
-  if (signals_conns_.find(oppo_id) == signals_conns_.end()) {
+  auto iter = signals_conns_.find(oppo_id);
+  if (iter == signals_conns_.end()) {
+    return;
+  }
+  auto& connections = iter->second;
+  if (connections.find(self_id) == connections.end()) {
     return;
   }
 
-  if (signals_conns_[oppo_id].find(self_id) == signals_conns_[oppo_id].end()) {
-    return;
-  }
-
-  signals_conns_[oppo_id][self_id].Disconnect();
-  signals_conns_[oppo_id].erase(self_id);
+  connections[self_id].Disconnect();
+  connections.erase(self_id);
 }
 
 template <typename MessageT>

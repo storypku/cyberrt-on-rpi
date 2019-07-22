@@ -160,6 +160,7 @@ TEST(ListenerHandlerTest, listener_handler_test) {
   listener_handler.Disconnect(self_id, opposite_id);
   listener_handler.Disconnect(self_id, opposite_id);
   listener_handler.Run(message, message_info);
+  EXPECT_EQ(2, call_count);
 }
 
 }  // namespace transport

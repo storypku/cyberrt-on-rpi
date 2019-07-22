@@ -33,4 +33,7 @@
 
 bazel-*
 WORKSPACE
+*.swp
+*.o
+*~
 

@@ -78,10 +78,7 @@ History<MessageT>::History(const HistoryAttributes& attr)
   if (attr.history_policy == proto::QosHistoryPolicy::HISTORY_KEEP_ALL) {
     depth_ = max_depth_;
   } else {
-    depth_ = attr.depth;
-    if (depth_ > max_depth_) {
-      depth_ = max_depth_;
-    }
+    depth_ = std::min(attr.depth, max_depth_);
   }
 }
 

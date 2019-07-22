@@ -32,8 +32,8 @@ using cyber::proto::QosReliabilityPolicy;
 
 class QosProfileConf {
  public:
-  QosProfileConf();
-  virtual ~QosProfileConf();
+  QosProfileConf() = default;
+  virtual ~QosProfileConf() = default;
 
   static QosProfile CreateQosProfile(const QosHistoryPolicy& history,
                                      uint32_t depth, uint32_t mps,
