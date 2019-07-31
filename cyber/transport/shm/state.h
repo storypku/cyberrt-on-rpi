@@ -47,7 +47,7 @@ class State {
   void IncreaseReferenceCounts() { reference_count_.fetch_add(1); }
 
   void set_need_remap(bool need) { need_remap_.store(need); }
-  bool need_remap() { return need_remap_; }
+  bool need_remap() { return need_remap_.load(); }
 
   uint64_t ceiling_msg_size() { return ceiling_msg_size_.load(); }
   uint32_t reference_counts() { return reference_count_.load(); }

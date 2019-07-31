@@ -22,7 +22,6 @@
 #include <atomic>
 #include <condition_variable>
 #include <cstdlib>
-#include <iostream>
 #include <mutex>
 #include <thread>
 

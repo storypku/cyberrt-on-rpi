@@ -17,12 +17,8 @@
 #ifndef CYBER_BASE_RW_LOCK_GUARD_H_
 #define CYBER_BASE_RW_LOCK_GUARD_H_
 
-#include <stdint.h>
-#include <unistd.h>
 #include <atomic>
 #include <condition_variable>
-#include <cstdlib>
-#include <iostream>
 #include <mutex>
 #include <thread>
 

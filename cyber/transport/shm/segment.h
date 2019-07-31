@@ -17,10 +17,10 @@
 #ifndef CYBER_TRANSPORT_SHM_SEGMENT_H_
 #define CYBER_TRANSPORT_SHM_SEGMENT_H_
 
-#include <stdint.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/types.h>
+#include <cstdint>
 #include <cstddef>
 #include <memory>
 #include <mutex>

@@ -32,9 +32,7 @@ Segment::Segment(uint64_t channel_id, const ReadWriteMode& mode)
       conf_(),
       state_(nullptr),
       blocks_(nullptr),
-      managed_shm_(nullptr),
-      block_buf_lock_(),
-      block_buf_addrs_() {
+      managed_shm_(nullptr) {
   id_ = static_cast<key_t>(channel_id);
 }
 
