@@ -29,14 +29,13 @@ class Time {
  public:
   static const Time MAX;
   static const Time MIN;
-  Time() {}
+  Time() = default;
   explicit Time(uint64_t nanoseconds);
   explicit Time(int nanoseconds);
   explicit Time(double seconds);
   Time(uint32_t seconds, uint32_t nanoseconds);
   Time(const Time& other);
   Time& operator=(const Time& other);
-  ~Time() {}
 
   static Time Now();
   static Time MonoTime();

@@ -62,8 +62,6 @@ std::shared_ptr<CRoutine> ChoreographyContext::NextRoutine() {
 }
 
 bool ChoreographyContext::Enqueue(const std::shared_ptr<CRoutine>& cr) {
-  PerfEventCache::Instance()->AddSchedEvent(SchedPerf::RT_CREATE, cr->id(),
-                                            cr->processor_id());
   WriteLockGuard<AtomicRWLock> lock(rq_lk_);
   cr_queue_.emplace(cr->priority(), cr);
   return true;
@@ -87,6 +85,10 @@ void ChoreographyContext::RemoveCRoutine(uint64_t crid) {
     auto cr = it->second;
     if (cr->id() == crid) {
       cr->Stop();
+      while (!cr->Acquire()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        AINFO_EVERY(1000) << "waiting for task " << cr->name() << " completion";
+      }
       it = cr_queue_.erase(it);
       cr->Release();
       return;

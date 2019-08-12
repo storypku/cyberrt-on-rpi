@@ -22,7 +22,6 @@
 
 #include "cyber/common/environment.h"
 #include "cyber/common/file.h"
-#include "cyber/event/perf_event_cache.h"
 #include "cyber/scheduler/policy/classic_context.h"
 #include "cyber/scheduler/processor.h"
 
@@ -38,8 +37,6 @@ using apollo::cyber::common::GlobalData;
 using apollo::cyber::common::PathExists;
 using apollo::cyber::common::WorkRoot;
 using apollo::cyber::croutine::RoutineState;
-using apollo::cyber::event::PerfEventCache;
-using apollo::cyber::event::SchedPerf;
 
 SchedulerClassic::SchedulerClassic() {
   std::string conf("conf/");
@@ -165,10 +162,8 @@ bool SchedulerClassic::DispatchTask(const std::shared_ptr<CRoutine>& cr) {
       ClassicContext::cr_group_[group_name][cr_prio]
           .emplace_back(cr);
     }
-
-    PerfEventCache::Instance()->AddSchedEvent(SchedPerf::RT_CREATE, crid,
-                                              cr->processor_id());
   }
+
   ClassicContext::Notify(cr->group_name()); // Notify for?
   return true;
 }
@@ -246,6 +241,10 @@ bool SchedulerClassic::RemoveCRoutine(uint64_t crid) {
       cr = *it;
 
       (*it)->Stop();
+      while (!cr->Acquire()) {
+        std::this_thread::sleep_for(std::chrono::microseconds(1));
+        AINFO_EVERY(1000) << "waiting for task " << cr->name() << " completion";
+      }
       it = cr_queue.erase(it);
       cr->Release();
       return true;
